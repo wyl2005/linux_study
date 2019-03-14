@@ -1,0 +1,7 @@
+shrink
+shallow
+
+1. gradient = rate at which cost changes with respect to weights or biases
+	梯度是衡量权重和偏差变化而产生的cost变化速率。
+
+2. cost = predict output - actual output

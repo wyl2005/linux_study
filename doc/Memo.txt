@@ -1,0 +1,89 @@
+深圳市凯丰实业有限公司  交行深圳竹子林支行
+
+4430 6609 6011 8012 33223
+
+carlos-don
+
+621669 2000000 570 274
+
+6230 52347001 3245 774
+
+全景地图：
+http://www.sz68.com/land/025012340000006034/
+http://720.szhome.com/ltc/A646-0078.html
+
+http://www.sz68.com/land/025012340000006001/
+
+http://www.sz68.com/land/025012340000006034/
+
+http://news.szhome.com/233607.html
+
+
+1.
+1月7日 15:34
+hello, 能否发一版最新的laserbox 上位机软件给我
+已读
+
+https://www.makeblock.com/cn/maker-tools/laserbox-2
+
+2. USB Ethernet/RNDIS Gadget， laserbox usb 虚拟网口驱动
+
+3. 打印任务统计
+commit 59bc7e567ed3ae36125fe1589c1c216789e58671
+Author: wangyilong <wangyilong@makeblock.com>
+Date:   Tue Jan 15 15:48:01 2019 +0800
+
+    Fix get print task number interface.
+
+    Fix get print task number interface.
+
+
+4. 
+ctrl_interface=/var/run/wpa_supplicant
+update_config=1
+
+network={
+        ssid="TP-LINK_35D7"
+        psk="123456789"
+        key_mgmt=WPA-PSK
+}
+
+
+ctrl_interface=/var/run/wpa_supplicant
+update_config=1
+
+network={
+        ssid="laserbox"
+        psk="12345678"
+        key_mgmt=WPA-PSK
+}
+
+
+
+root@makeblock0:~# cat /config/wpa_supplicant.conf
+ctrl_interface=/var/run/wpa_supplicant
+update_config=1
+
+network={
+        ssid="Maker-office"
+        psk="hulurobot423"
+        key_mgmt=WPA-PSK
+}
+
+
+5. 
+如果版本不对应往往会出现很多问题，需要各种方法才能解决，现记录一下我工作中遇到的版本问题，以下版本一般情况下是可以直接安装使用的。
+
+目前一直在使用的版本：
+
+Python 3.5.2 :: Anaconda 4.2.0 (64-bit) 
+tensorflow.version==’1.4.0’
+
+6. 关软件：
+[debug] [01-01 00:22:24] [40.01.003.01.ht2] CLIENT 201.234.3.2:65217 authority deleted !!!
+[debug] [01-01 00:22:24] [40.01.003.01.ht2] ClientDisconnected:0 !!!
+
+
+拔线：
+[debug] [01-01 01:25:24] [40.01.003.01.ht2] CLIENT 201.234.3.2:50032 dead !!!
+[debug] [01-01 01:25:24] [40.01.003.01.ht2] ClientDisconnected:0 !!!

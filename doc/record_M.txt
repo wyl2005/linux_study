@@ -1,0 +1,1656 @@
+电话报销 2017.5
+
+1. UE中，^t 是tab符. ^n（0x0A 表示UNIX文件中的回车换行符号），^p（0x0D0A 表示DOS文件中的回车换行符号）。
+        unix            <LF>      \n
+        dos             <CR><LF>  \r\n  0D 0A
+        mac             <CR>
+
+2. WIN + R  psr.exe  问题步骤记录器。
+   Alt + Space   打开窗口快捷键
+
+3. Linux 服务器：172.21.29.243
+   Account: Allan-yl.Wang
+   Password: 123456
+   
+4. .globl指示告诉汇编器，_start这个符号要被链接器用到，所以要在目标文件的符号表中标记它是一个全局符号。
+
+5. eMMC内部有设置Controller (控制器)处理了：
+   1. ECC
+   2. L2P (Logical to Physical Translation)
+   3. Bad-Block Management
+   4. Wear-Leveling 等NAND Flash管理的问题.
+    EMMC在总线上传以数据包的形式，有crc check。
+    slc nand flash厂商保证第一个块出厂不是坏块。有2%的坏块上限，1024/20个坏块上限。
+   
+6. LDR 的两种用法
+   1）LDR pc, =MyHandleIRQ 表示将MyHandleIRQ符号放入pc寄存器中
+   2）LDR PC，MyHandleIRQ 表示将读取存储器中MyHandleIRQ符号所表示的地址中的值，及需要多读一次存储器。
+   
+7. word expression就是在当前位置放一个word型的值，这个值就是expression  
+   举例来说，  
+   _rWTCON:  
+   .word 0x15300000  
+   就是在当前地址，即_rWTCON处放一个值0x15300000  
+   
+8. 在C语言的宏中，#的功能是将其后面的宏参数进行字符串化操作（Stringfication），
+   简单说就是在对它所引用的宏变量 通过替换后在其左右各加上一个双引号。  
+   e.g.
+		#define WARN_IF(EXP)    do{ if (EXP)    fprintf(stderr, "Warning: " #EXP "/n"); }   while(0)
+		
+		WARN_IF (divider == 0);
+        被替换为
+        do {
+        if (divider == 0)
+        fprintf(stderr, "Warning" "divider == 0" "/n");
+        } while(0);
+
+9. ##被称为连接符（concatenator），用来将两个Token连接为一个Token。注意这里连接的对象是Token就行，而不一定 是宏的变量。
+   比如你要做一个菜单项命令名和函数指针组成的结构体的数组，并且希望在函数名和菜单项命令名之间有直观的、名字上的关系。 
+   e.g. 
+		#define LINK_MULTIPLE(a,b,c,d) a##_##b##_##c##_##d
+        typedef struct _record_type LINK_MULTIPLE(name,company,position,salary);
+        // 这里这个语句将展开为：
+        // 	typedef struct _record_type name_company_position_salary;
+		
+10. 地址无关: 编译地址不等于运行地址. 位置无关代码——PIC（Position Independent Code）
+              寻址是基于pc值的, 在pc值上+/-一个偏移值, 得到运行地址.以ARM为例, 用adr来寻址, adr的实际上是一个伪指令, 在代码编译时, 
+			  会被编译器替换成对pc的+/-运算.对pc的+/-运行显然是有一个地址范围的, 所以我们在上面选择代码量小的地址无关.(在MMU打开之前, Kernel的代码必须是地址无关的))
+			  e.g. b和bl指令  B只能在当前PC的32M(24bit<<2)范围内跳转
+			  
+	地址相关: 编译地址等于运行地址.  e.g. LDR PC, =lable
+	总结来说：B和BL指令确实是以当前PC为基准进行的相对跳转，反汇编得到的跳转地址是基于ELF文件中保留的信息计算出来的地址，而并非运行时真正的跳转地址，当运行起始地址和链接脚本设定的起始地址一致时，两者相等。
+
+也就是说，忘记反汇编出来的那条跳转指令吧。
+11. B跳转指令是代码位置无关的，经过汇编后会替换为当前PC值加（减）一个修正值，不管这条指令是在哪一个地址执行，都能跳转到指定的位置。
+    B只能在当前PC的32M范围内跳转。
+    LDR PC，=xxx指令将向PC直接装载一个标号xxx的值，但标号经过编译后将被替换为一个与RO相对应的值，这样无论指令在何处执行都能跳转到一个指定的位置。	
+
+12. 所谓的relocation，就是重定位，uboot运行后会将自身代码拷贝到sdram的另一个位置继续运行
+	新版uboot在sdram空间分配上，是自顶向下，
+    不管uboot是从哪里启动，spiflash，nandflash，sram等跑到这里code都会被从新定位到sdram上部的一个位置，继续运行。
+    我找了一个2010.6版本的uboot大体看了一下启动代码，是通过判断_start和TEXT_BASE（链接地址）是否相等来确定是否需要relocate。如果uboot是从sdram启动则不需要relocate。
+    新版uboot在这方面还是有较大变动。
+    这样变动我考虑好处可能有二，一是不用考虑启动方式，all relocate code。二是不用考虑uboot链接地址，因为都要重新relocate。
+	
+13. 输出section的LMA：默认情况下，LMA等于VMA，但可以通过关键字AT()指定LMA。 AT 指定bin档内的位置(LMA)。
+    LMA load memory address 从xxx地址加载。VMA virtual memory address lds里 ">" 指定的地址 。
+
+14. objdump -t obj 输出目标文件的符号表
+    objdump -h obj 输出目标文件的所有段概括
+	objdump -d obj 反汇编
+arm-none-linux-gnueabi-objdump -dSl add > add.asm
+
+  -d, --disassemble        Display assembler contents of executable sections
+  -S, --source             Intermix source code with disassembly
+  -l, --line-numbers             Include line numbers and filenames in output
+15. source insight 依次进入optinos --》preference--》files
+    将其中的Reload externally modified files in background这个去掉勾选
+    1按住 shift+alt+s键勾选倒数第二个synchronize the current source选项
+    
+    2 如果一不行 那么在operation》preferenc》general中的background synchronize every 60 minutes   选项
+
+16. bin2emmc 1 0xff test.bin 0x700000  ; 读U盘中的test.bin文件到 user区7M的位置。
+
+17. mmc erase (檫除整块user区,boot1 区不会被檫掉) -> set_partition(add MBOOT, MPOOL, MBOOTBAK) -> mmc write.p 0x20200000 MBOOT $(filesize)
+    set_partition后MBOOT, MPOOL, MBOOTBAK 设在0x2000000 后面， 
+	mmc write.p 把 MBOOT-0x200000, MPOOL-0x500000, MBOOTBAK-0x1000000 设回0x2000000之前。
+    
+18. find ./ -maxdepth 1 -name "@*" 
+
+19. shell语法：
+    Linux Shell 环境中的输入输出重定向，用符号<和>来表示。0、1和2分别表示标准输入、标准输出和标准错误。
+    重定向标准输出，标准错误到同一个文件
+    cat foo > foo.txt 2>&1或cat foo &> foo.txt
+    这里第个顺序很重要，先把标准输出重定向到文件，再把标准错误输出到标准输出，因为标准输出已经重定向到文件，所以标准错误与重定向到文件。
+    >&与&>效果相同
+	
+    myname = vbird 或 myname=vbird tsai  语法错误，等号2边不能直接接空格。
+    发量内容若有空格符可使用双引号『"』戒单引号『'』将发量内容结吅起杢，但  
+      双引号内的字符如 $ 等，可以保有原本的特性，如下所示： 
+    var="lang is $LANG" 则『echo $var』可得『lang is en_US』 
+      单引号内的特殊字符则仅为一般字符 (纯文本)，如下所示： 
+    var='lang is $LANG' 则『echo $var』可得『lang is $LANG』 
+   
+   1.shell中变量的原形：${var} 大家常见的变量形式都是$var
+   这时应该用变量的原形：${var}，即是加一个大括号来限定变量名称的范围，如下
+    $ echo ${var}AA 
+    testAA 
+    
+    2.命令替换$(cmd)
+    命令替换$(cmd)和符号`cmd`(注意这不是单引号，在美式键盘上，`是ESC下面的那个键)有相同之处
+    
+    参数，脚本名称叫test.sh 入参三个: 1 2 3
+    运行test.sh 1 2 3后
+    
+    $0 The name of current program.
+    $*为"1 2 3"（一起被引号包住）
+    $@为"1" "2" "3"（分别被包住）
+    $#为3（参数数量）
+    $? 上个命令的退出状态,或函数的返回值
+    $$ The program's PID.
+    $! Last program's PID.
+
+    将指令的数据全部写入名为 list 的档案中
+    find /home -name .bashrc > list 2>&1  
+    find /home -name .bashrc &> list
+    
+    将 stdout 不 stderr 分别存到不同的档案里去 
+    find /home -name .bashrc > list_right 2> list_error 
+    
+    
+    先touch一个你想要的时间的文件,然后用"find -newer 创建的文件 -print"
+如:
+创建8月19日8点的文件
+touch -t 08190800 file     # 时间格式是 [[CC]YY]MMDDhhmm[.ss]  这里只要 mmddhhmm就好。
+find -newer file -print    # 这里的查找种类还有很多，如cnewer anewer。这样能把时间定住。
+
+num="ABCD1234"
+echo $((16#${num}))
+allan-yl.wang@szbcsvru6407:/work/allan-yl.wang$ num="ABCD1234"
+allan-yl.wang@szbcsvru6407:/work/allan-yl.wang$ echo $((16#${num}))
+2882343476
+
+$@：表示所有脚本参数的内容
+$#:表示返回所有脚本参数的个数。
+
+test -z string  刞定字符串是否为 0 ？若 string 为穸字符串，则为 true 
+
+
+20. \w表示大小写字母、数字、下划线，我看到这里也是不懂，因为以前对正则表达式只是稍微了解，而殿堂之路没有介绍\w的作用，后来是网上搜索看到javascript的正则表达式教程才知道，
+    ^[a-z]应该是表示小写字母开头，我觉得殿堂之路这本书对as3的正则表达式介绍可能不是那么详细，重点在告诉我们as3有
+	支持正则表达式和使用NFA引擎，要更深入去了解正则表达式应该需要另外一本专门介绍正则表达式的书。
+	
+21. ARM汇编器并不直接使用.align提供的参数n作为对齐目标，而是使用2^n的值，比如这里的参数为4，那么圆整对象为2^4 = 16。
+    这也就是为什么在ARM平台的Uboot或者Linux内核汇编中会出现.align 5的根本原因。
+	.align此时的取值范围为0-15，当取值为0，2或者不提供参数时均圆整于4。如果尝试使用大于15的值，将会得到编译器的如下抱怨：
+	# arm-linux-as asm.S -o asm.o
+    asm.S: Assembler messages:
+    asm.S:4: Error: alignment too large: 15 assumed
+
+22. Double Mboot的Boot_RAM 放在MBoot.bin的0x400处 和 rom_emmc_boot.bin的 0x8000 + sizeof(BootRAM_Hash) + siezeof(HASH0)，
+    单Mboot的Boot_RAM 放在rom_emmc_boot.bin的 0x8000 + siezeof(HASH0)。
+	
+23. factory_poweron_mode=secondary 开机会进PM51
+
+24. 把双屏显示改为单屏显示？
+    进入安卓系统后，执行
+	mount -o remount,rw /tvconfig
+    然后将
+	busybox vi /tvconfig/config/panel/UD_VB1_8LANE.ini
+	m_bPanelDualPort = 1;   小屏配置
+    由原先0设置为1；最后在mboot中，输入dbtable_init 1
+	ursa 大屏：m_bPanelDualPort = 0;
+25. 开mboot打印： dbg DEBUG
+
+26. make是根据依赖文件的时间戳来决定要不要重新编译的。在：
+    object: deplist
+            # actions
+    中，可以把头文件加进deplist，这样修改头文件后，make就会重新编译了。
+    单纯地修改文件，而不设置Makefile，则make程序不知道你这个文件对应哪个编译目标，自然无法判断要重新编译哪个目标了。
+	
+27. 关闭内核打印  echo "0 0 0 0" >/proc/sys/kernel/printk
+
+28. mount -o rw,remount /tvconfig 
+mount 文件夹的权限: mount -t ext4 -o dir_mode=0777,file_mode=0777 /dev/mmcblk0p10 /impdata 
+
+28. repo sync [project-list]
+    下载最新本地工作文件，更新成功，这本地文件和repository 中的代码是一样的。 可以指定需要更新的project ， 如果不指定任何参数，会同步整个所有的项目。
+    如果是第一次运行 repo sync ， 则这个命令相当于 git clone ，会把 repository 中的所有内容都拷贝到本地。 如果不是第一次运行 repo sync ， 
+	则相当于 git remote update ;  git rebase origin/branch .  repo sync 会更新 .repo 下面的文件。 如果在merge 的过程中出现冲突， 
+	这需要手动运行  git  rebase --continue
+	
+29. 用repo sync 在抓去 android source code 的时候，会经常出现一些错误导致 repo sync 中断，每次都要手动开始。 
+    可以用如下的命令，来自动重复：   $?=1; while [ $? -ne 0 ] ; do  repo sync ; done
+
+30. busybox tftp -g -r 02.png -l /tvconfig/boot0.png 172.21.28.3  利用tftp从服务器下载文件
+    busybox tftp -p -l boot0.jpg -r ./boot0.jpg 172.21.28.3	  利用tftp上传文件到服务器
+	
+	
+	busybox tftp -g -r 02.png -l /tvconfig/ 172.21.28.50
+	busybox tftp -p -l /tvconfig -r ./tvconfig 172.21.28.50	
+31.  奇美CMI M215HGE-L23
+
+32. ERROR: Your commit has trailing white space, please fix it.
+    You can use the follow command to do the check.
+    git diff --cached --check --no-ext-diff
+	
+33. grep怎么查找包含子目录的指定文件名后缀中的字符串 
+命令：find ./ -name "*.h" | xargs grep --color=auto -nir "abc"
+含义：查找.h文件中的abc字符串。
+      n 行号 r 递归 i 不区分大小写
+补充说明：xargs是一条Unix和类Unix操作系统的常用命令。它的作用是将参数列表转换成小块分段传递给其他命令，以避免参数列表过长的问题。
+
+34. logcat -s tvos
+logcat -s tvos PowerHal
+
+35. gunzip ramdisk.img.gz   
+    cpio-i -F ../ramdisk.img  里面的内容与root文件夹一样的了。
+
+36. file system.img就可以看到这个文件是个什么格式的了
+   system.img: Linux rev 1.0 ext4 filesystem data..
+   tvconfig.img: Linux rev 1.0 ext4 filesystem data, UUID=57f8f4bc-abf4-655f-bf67-946fc0f9f25b (extents) (large files)
+   sudo mount -t ext4 -o loop tvconfig.img tvconfig/
+   gingerbread的system.img缺省是ext4格式的，使用mount命令将system.img mount到某个目录下，
+   然后用编译android framework时生成的make_ext4fs命令重新打包成成system.img，这个命令缺省在out/host/linux-x86/bin/make_ext4fs
+
+37.lzop工具最适合在注重压缩速度的场合，压缩文件时会新建.lzo文件，而原文件保持不变(使用-U选项除外)
+   lzop -v test 创建test.lzo压缩文件，输出详细信息，保留test文件不变
+   lzop -dv test.lzo 解压test.lzo得到test文件，输出详细信息，保留test.lzo不变
+   
+38. makefile 里  all: TEST := file1.c
+    all不依赖file1.c，只是给变量TEST赋值。
+
+makefile里的函数
+
+	makefile里的函数使用，和取变量的值类似，是以一个‘$’开始，
+	然后是一个括号里面是函数名和需要的参数列表，多个变量用逗号隔开，像这样
+	return = $(functionname  arg1,arg2,arg3...)。
+	可能这里的'$'更像是从某个地址取值类似的操作。
+	
+	subst:
+　　用法是$(subst FROM,TO,TEXT),即将TEXT中的东西从FROM变为TO
+
+	wildcard:
+	使用：SRC = $(wildcard *.c ./foo/*.c) 
+	搜索当前目录及./foo/下所有以.c结尾的文件，生成一个以空格间隔的文件名列表，
+	并赋值给SRC.当前目录文件只有文件名，子目录下的文件名包含路径信息，比如./foor/bar.c。
+
+	notdir
+	使用：SRC = $(notdir wildcard)
+	去除所有的目录信息，SRC里的文件名列表将只有文件名。
+
+	patsubst
+	使用：OBJ = $(patsubst %.c %.o $(SRC)) 
+	patsubst是patten substitute的缩写，匹配替代的意思。这句是在SRC中找到所有.c 结尾的文件，
+	然后把所有的.c换成.o。
+
+39. all: test
+		@echo 111
+	test:
+		@echo 222
+	test不是实体文件时，111 和222 都会被打印出来
+	test是实体文件时。当test比all更新时，111会被打印。 222一定不会被打印。
+
+40. RGBA (0, 0, 0) 黑色， (255,255,255)白色， Alpha=255 完全不透明， Alpha=0 完全透明。
+
+41. y := $(x) bar
+    x := foo
+    那么，y的值是“bar”，而不是“foo bar”。
+	
+    x := foo
+    y := $(x) bar
+    x := later
+	其等价于：
+    y := foo bar
+    x := later
+	
+	foo = $(bar)
+    bar = $(ugh)
+    ugh = Huh?
+    all:
+        echo $(foo)
+	执行“make all”将会打出变量$(foo)的值是“Huh?”,$(foo)的值是$(bar)，$(bar)的值是$(ugh)，$(ugh)的值是“Huh?”）可见，变量是可以使用后面的变量来定义的。
+
+42. 如果变量之前没有定义过，那么，“+=”会自动变成“=”，如果前面有变量定义，那么“+=”会继承于前次操作的赋值符。如果前一次的是“:=”，那么“+=”会以“:=”作为其赋值符
+
+43.make menuconfig
+   打开之后会出现选项，y 为*   n为空  m为M
+  (*) a.c  --- a.o ----- zImage 既编译又连接
+  (*) b.c  --- b.o ----- zImage 既编译又连接
+  (M) d.c ---  d.o  只编译不连接
+  ( )  e.c              不编译
+ 
+44. 反汇编命令   arm-linux-objdump -D -S hello >hello.txt （>hello.txt 把结果重定向到 hello.txt）
+    ELF文件查看 arm-linux-readelf -a hello （可以查看大段小段模式，及运行平台）
+                arm-linux-readeld -d hello （查看hello使用的动态链接库）
+				
+45. 6A638-monet, 6A628-nike2, 6A828-muji, 928-monaco, 918-napoli, 
+    6m38-u6, 6m40-u7, 6m30-u8, 6m60-u11
+    338  ---  messi
+    358  ---  mainz
+    538  ---  Macan
+    628  ---  nike2
+    638  ---  Monet
+    648  ---  Mooney
+    658  ---  Mustang
+    828  ---  Muji
+    838  ---  Maxim
+    918  ---  napoli
+    928  ---  Monaco
+    938  ---  Maserati
+    9280  --- clipper
+    9380  --- Curry
+
+
+46. PM_51 RTC REG_PMRTC_CNT=0x1216
+
+47. UUID含义是通用唯一识别码 (Universally Unique Identifier)，这 是一个软件建构的标准，
+    也是被开源软件基金会 (Open Software Foundation, OSF) 的组织应用在分布式计算环境 (Distributed Computing Environment, DCE) 领域的一部分。
+
+48. 03-.tar.gz格式
+解压：[＊＊＊＊＊＊＊]$ tar zxvf FileName.tar.gz
+压缩：[＊＊＊＊＊＊＊]$ tar zcvf FileName.tar.gz DirName
+
+49. git reset --hard 3628164
+    git reset --hard HEAD^
+	上一个版本就是HEAD^，上上一个版本就是HEAD^^，当然往上100个版本写100个^比较容易数不过来，所以写成HEAD~100
+
+50. 工作区暂存区的比较：git diff
+   暂存区head的比较： git diff --cached
+   工作区head的比较: git diff HEAD	
+   git status -uno 可以只列出所有已经被git管理的且被修改但没提交的文件。
+
+51. 待机stanby mode 可以读寄存器， sleep mode 不能读。   
+
+52. jimmy tel 6215
+
+53. 3.2.	Git上cherry pick
+    3.2.1	Summary
+    4.4上sync code，更新到其他线上，例如：5.0，5.1；
+    3.2.2	Rootcase
+    N/A
+    3.2.3	Solution
+    [sample] 4.4->5.1
+    ?	进入提交目录；
+    ?	git checkout aosp/lmr1-mstar-master
+    ?	git cherry-pick –x commit id
+    ?	case no-conflict: git push aosp HEAD:refs/for/lmr1-mstar-master
+    ?	case conflict: 
+    n	使用beyond compare 对比conflict部分，进行修正；
+    n	git add . –all
+    n	git cherry-pick --continue
+    n	git push aosp HEAD:refs/for/lmr1-mstar-master 
+	
+54. Uart 设备与PC之间一般是直连。设备与设备之间是交叉连接。
+
+55. 公版待机走的是sleep mode，所以读寄存器才读不到；但我这边已经改成standby mode了，所以是可以读到的
+    RTC Reg 0x1216
+
+56. TVOS-04.10.010.05.01.DMBT.Monet  1G AN5.1
+    TVOS-04.10.020.05.01.DMBT.Monet  768MB AN4.4
+    TVOS-04.10.030.05.01.DMBT.Monet  512MB 裸奔机
+    TVOS-04.10.040.05.01.DMBT.Monet  512MB FHD
+
+57. tee.bin跑在R2 上，和arm一起跑，由mboot加载。
+
+58. --exclude-dir=DIR
+     Exclude directories matching the pattern DIR from recursive searches. 
+   单个目录示例  grep -E "http"  ./ -R --exclude-dir=.git 
+   多个目录示例   grep -E "http"  . -R --exclude-dir={.git,res,bin}
+   多个文件示例
+   排除扩展名为 java 和 js 的文件   grep -E "http"  . -R --exclude=*.{java,js}
+   
+   grep -nir fcie4 ./ --include={*.c,*.h}
+59. git提取出两个版本之间的差异文件并打包
+git diff 608e120 4abe32e --name-only | xargs zip update.zip
+
+50. 使用&命令后，作业被提交到后台运行，当前控制台没有被占用，但是一但把当前控制台关掉(退出帐户时)，作业就会停止运行。
+   nohup命令可以在你退出帐户之后继续运行相应的进程。nohup就是不挂起的意思( no hang up)。该命令的一般形式为：
+   nohup command & 
+  nohub tar xzf repo.tar.gz &   后台运行
+
+51. ""首先在当前目录下寻找，如果找不到，再到系统目录中寻找
+    <>直接去系统目录中找
+    
+52. error: invalid storage class for function
+  编译的时候出现了这个错误，感觉自己的程序应该没有问题，后来发现是函数没有闭合，也就是最后少了一个大括号，导致这个函数，
+   和他以后的函数全都报了这个错误。加上大括号后重新编译，程序顺利通过。
+  
+53. do while 的continue之后会执行while中的条件
+
+54. aosp "Android Open-Source Project"
+
+55. OP(OSD vedio 混合送)
+    OC(OSD和vedio 分开送) 开 OSDC_Init
+    
+56. usb start 4;
+    fatload usb 0:4 0x20200000 hdcp2_key.bin;
+    eeprom write 0x20200000 0x200 410;
+    这样通过命令：eeprom dump 0x200 410
+    数据都正确
+
+57. git stash save "test"
+    git stash list
+    git stash pop
+   
+58. 删除 一些 没有 git add 的 文件；
+    git clean 参数
+    -n 显示 将要 删除的 文件 和  目录
+     -f 删除 文件，-df 删除 文件 和 目录
+     
+59. 今天在提交代码之前 git status了一下，发现一片红啊～每个git库下的所有文件都飘红了
+原来是filemode的变化，文件chmod后其文件某些位是改变了的，如果严格的比较原文件和chmod后的文件，两者是有区别的，但是源代码通常只关心文本内容，因此chmod产生的变化应该忽略，所以设置一下：
+切到源码的根目录下，
+repo forall -c git config core.filemode false
+repo forall -c "git checkout --track aosp/<branch name>" 
+
+通过git status -uno可以只列出所有已经被git管理的且被修改但没提交的文件。
+-u[<mode>], --untracked-files[=<mode>] 
+    no - Show no untracked files
+    normal - Shows untracked files and directories
+    all - Also shows individual files in untracked directories.
+
+60. 我发现这样根本不行。看来repo不能遍历执行checkout这个命令。今天我终于想到了另外一个命令"git reset --hard HEAD" 哈哈
+repo forall -c git git reset --hard HEAD
+再说一个新发现：以前用repo forall 执行一些命令的时候，可能再遍历到某个仓库的时候出了问题，但是我却苦于不知道这个仓库到底是哪个！一直也没有解决。今天终于找到了。。。。  关键时候还是要看命令自己带的帮助手册呀。。。
+repo help forall  用这个命令查看下针对forall的帮助吧。说的很清楚，repo执行的时候加上-p参数就可以在遍历到每个仓库的时候先打印出当前的pwd，然后再继续执行-c所指定的命令。举例如下：
+repo forall -p -c git branch    
+ 
+//该命令会遍历所有仓库并打印每个仓库的分支情况，由于有了-p参数，这样便会打印出每个仓库的路径！！！
+
+61. 再说一个新发现：以前用repo forall 执行一些命令的时候，可能再遍历到某个仓库的时候出了问题，但是我却苦于不知道这个仓库到底是哪个！一直也没有解决。今天终于找到了。。。。  关键时候还是要看命令自己带的帮助手册呀。。。
+repo help forall  用这个命令查看下针对forall的帮助吧。说的很清楚，repo执行的时候加上-p参数就可以在遍历到每个仓库的时候先打印出当前的pwd，然后再继续执行-c所指定的命令。举例如下：
+repo forall -p -c git branch    
+ 
+//该命令会遍历所有仓库并打印每个仓库的分支情况，由于有了-p参数，这样便会打印出每个仓库的路径！！！
+
+62. 假定远端库名为 origin, 你要比较的本地分支为 test, 远端分支为 xxx
+    获取远端库最新信息
+    git fetch origin
+    做diff
+    git diff test origin/xxx
+    
+    Branch lmr1-mstar-master set up to track remote branch lmr1-mstar-master from aosp.
+    
+63. 7.4 跟踪远程分支
+    从远程拉取dev分支到本地，并切换到dev分支,ps:需要git1.6.2以上版本
+    git checkout --track origin/dev
+    从远程拉取dev分支到本地,命名为develop，并切换到develop分支
+    git checkout -b develop origin/dev
+    
+    7.5 提交本地分支数据到远程服务器
+    git push origin local:remote
+    git push origin dev:dev
+    如果当前是在dev分支下工作，可直接git push
+    
+    7.6 删除远程分支
+    git push origin :dev
+    
+64. 1.静态变量（全局变量、静态局部变量）即使没有初始化列表，也会自动全部初始化填充0。
+    2.对于局部自动变量，只要初始化列表存在，即使没有在列表中的部分也会被初始化填充0。所以只要使初始化列表全为零即可。例如LS所说的int a[10] = {0};。注意这里数组大小不能省略，否则初始化列表会被当做数组的全部内容。
+
+  二维数组：
+    int arr[3] [4];//这表示定义了一个3行4列的二维数组
+	int brr [3] [4] ={{1,2,3,4},{5,6,7,8},{9,10,11,12}};
+	int crr [3] [4] = {1,2,3,4,5,6,7,8,9,10,11,12};
+	int err [3][4] = {1,2,3,4,5};
+	int grr[][4]={1,2,3,4,5,6,7,8,9,10};//二维数组中行可以省略，至少写出列，编译器可以推断出来行
+
+	1. 数组指针：
+	int (*p)[4]:p是一个指向整型数组的指针，简称数组指针，重点在于一定是个指针，数组起修饰作用
+
+	2. 指针数组:
+	int *p[4]:是一个保存指针的数组
+
+三维数组又被认为是二维数组的数组，而二维数组也可以认为是一维数组的数组。
+	int a[4];   //包含四个元素的数组
+	int a[3][4];   //3行四列的二维数组，即3个包含四个元素的数组
+	int a[2][3][4];   //三维数组，2个3行四列的二维数组
+	
+65. while(var--) 用var判断是否进入循环 -》var减1 -》跑循环里的code
+    for()
+    
+66. strcmp() 函数不能接受为 NULL 的字符窜，会出现段错误。 
+比如下面的程序是不行的 
+#include <string.h> 
+
+int main(int argc, char **argv) 
+{ 
+if (strcmp (NULL, "test") == 0) 
+return -1; 
+
+return 0; 
+} 
+C的库函数没有对NULL值进行保护是为了高效，程序员必须保证在调用它之前，先行做参数有效性的检验。
+
+67. 指针，& 取地址， * 解引用。
+
+68. CMA(Contiguous Memory Allocate) 连续内存分配。是Linux Kernel内存管理系统的扩展，目的在于解决视频播放（特别对于4K视频）需要预留大量连续内存导致运行内存紧张的问题。
+   CMA的原理，就是在VDEC/XC buffer暂时不使用的时候，这些buffer可以暂时借给别人使用。不过一旦XC/VDEC需要这些buffer的时候，kernel必须保证可以把XC/VDEC buffer从暂借者手上要回来。
+   一旦发生kernel 长时间（超过1s）无法从暂借者手上要回CMA buffer，则称之为CMA migration失败
+
+69 dd if=RomBoot.bin bs=1024 skip=64 count=10 of=PAIRPAGEMAP_v2.ppm.bin 
+
+70. 比如查看home目录的大小：
+    du -s /home
+    也可以：
+    du -sh /home
+    
+71. [oracle@Linux]$ touch f1          #创建一个测试文件f1
+    [oracle@Linux]$ ln f1 f2          #创建f1的一个硬连接文件f2
+    [oracle@Linux]$ ln -s f1 f3       #创建f1的一个符号连接文件f3
+    [oracle@Linux]$ ls -li            # -i参数显示文件的inode节点信息
+    total 0
+    9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f1
+    9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f2
+    9797649 lrwxrwxrwx  1 oracle oinstall 2 Apr 21 08:11 f3 -> f1
+   
+    1).删除符号连接f3,对f1,f2无影响；
+    2).删除硬连接f2，对f1,f3也无影响；
+    3).删除原文件f1，对硬连接f2没有影响，导致符号连接f3失效；
+    4).同时删除原文件f1,硬连接f2，整个文件会真正的被删除。    
+    
+72. 正则表达式：^ 和 $ 他们是分别用来匹配字符串的开始和结束，以下分别举例说明：
+      "^The": 开头一定要有"The"字符串;
+      "of despair$": 结尾一定要有"of despair" 的字符串
+      
+73. malloc调用形式为(类型*)malloc(size)：在内存的动态存储区中分配一块长度为“size”字节的连续区域，返回该区域的首地址。 
+    calloc调用形式为(类型*)calloc(n，size)：在内存的动态存储区中分配n块长度为“size”字节的连续区域，返回首地址。 
+    realloc调用形式为(类型*)realloc(*ptr，size)：将ptr内存大小增大到size。(也可以缩小，缩小的内容消失)。
+    
+    另外有一点不能直接看出的区别是，malloc 只管分配内存，并不能对所得的内存进行初始化，所以得到的一片新内存中，其值将是随机的。
+    calloc在动态分配完内存后，自动初始化该内存空间为零。      
+    
+73. kernel会将开机信息存储在一个ring?buffer中。您若是开机时来不及查看信息，可利用dmesg来查看。
+
+74. SMP（Symmetric Multi-Processing），对称多处理结构的简称，是指在一个计算机上汇集了一组处理器(多CPU),各CPU之间共享内存子系统以及总线结构
+
+75. $ df -Th
+#查看分区磁盘使用情况(看分区是否存在)。
+$ cat /etc/mtab
+#已挂载分区情况。
+mount 不带参数，查看各个分区的mount状态。
+
+76. ramdisk一个作用就是用来解决boot过程中mount根文件系统的“先有鸡还是先有蛋”的问题的。一般来说，根文件系统在形形色色的存储设备上，
+不同的设备又要不同的硬件厂商的驱动，比如intel的南桥自然需要intel的ide/sata驱动，VIA的南桥需要VIA的ide/sata驱动，根文件系统也有不同的文件系统的可能，
+比如ubuntu发行版可能一般用ext3，suse可能就不是了，不同的文件系统也需要不同的文件系统模块；假如把所有驱动/模块都编译进内核，那自然没问题，
+但是这样就违背了“内核”的精神或本质，所以一般来说驱动/模块都驻留在根文件系统本身上/lib/modules/xxx，那么“鸡蛋”问题就来了，
+现在要mount根文件系统却需要根文件系统上的模块文件，
+怎么办？于是，就想出ramdisk，内核总是能安装ramdisk的，然后把所有可能需要的驱动/模块都放在ramdisk上，首先，让内核将ramdisk当作根文件系统来安装，
+然后再用这个根文件系统上的驱动来安装真正的根文件系统，就将这个矛盾问题解决了
+
+77. fstab(/etc/fstab)是Linux下比较重要的配置文件，它包含了系统在启动时挂载文件系统和存储设备的详细信息。
+
+78. git blame filename.c 显示文件的每一行是在那个版本最后修改。
+    git log -p filename 查看某一个文件的详细提交记录
+    git log -- file-name  查看历史提交中对file-name进行修改的提交
+79. 4K2K图片解碼出來是yuyv格式, 1pixel = 2bytes
+
+80. Makefile有三个非常有用的变量。分别是$@，$^，$<代表的意义分别是：
+$@--目标文件，$^--所有的依赖文件，$<--第一个依赖文件。
+
+81. 4.常用的环境变量
+　　PATH 决定了shell将到哪些目录中寻找命令或程序
+　　HOME 当前用户主目录
+　　HISTSIZE　历史记录数
+　　LOGNAME 当前用户的登录名
+　　HOSTNAME　指主机的名称
+　　SHELL 　　当前用户Shell类型
+　　LANGUGE 　语言相关的环境变量，多语言可以修改此环境变量
+　　MAIL　　　当前用户的邮件存放目录
+　　PS1　　　基本提示符，对于root用户是#，对于普通用户是$
+
+$0	当前脚本的文件名
+$n	传递给脚本或函数的参数。n 是一个数字，表示第几个参数。例如，第一个参数是$1，第二个参数是$2。
+$#	传递给脚本或函数的参数个数。
+$*	传递给脚本或函数的所有参数。
+$@	传递给脚本或函数的所有参数。被双引号(" ")包含时，与 $* 稍有不同，下面将会讲到。
+$?	上个命令的退出状态，或函数的返回值。
+$$	当前Shell进程ID。对于 Shell 脚本，就是这些脚本所在的进程ID。
+
+
+82. 使用echo命令查看单个环境变量。例如：echo $PATH
+　  使用env查看所有环境变量。例如：
+　  使用set查看所有本地定义的环境变量。
+    在shell的命令行下直接使用[export 变量名=变量值] 定义变量，该变量只在当前的shell(BASH)或其子shell(BASH)下是有效的，shell关闭了，
+    变量也就失效了，再打开新shell时就没有这个变量，需要使用的话还需要重新定义。
+  set:显示(设置)shell变量 包括的私有变量以及用户变量，不同类的shell有不同的私有变量 bash,ksh,csh每中shell私有变量都不一样
+  env:显示(设置)用户变量变量
+  export:显示(设置)当前导出成用户变量的shell变量。
+    
+83. EDID: Extended Display Identification Data（扩展显示标识数据）是一种VESA 标准数据格式，其中包含有关监视器及其性能的参数，
+    包括供应商信息、最大图像大小、颜色设置、厂商预设置、频率范围的限制以及显示器名和序列号的字符串。
+    
+84. /// Mailbox Audio Frequency Type
+    typedef enum
+    {
+        E_MAPI_RAPTORS_HDMITX_AUDIO_32KHz   = 0, // 0x00
+        E_MAPI_RAPTORS_HDMITX_AUDIO_44KHz   = 1, // 0x01
+        E_MAPI_RAPTORS_HDMITX_AUDIO_48KHz   = 2, // 0x02
+        E_MAPI_RAPTORS_HDMITX_AUDIO_88KHz   = 3, // 0x03
+        E_MAPI_RAPTORS_HDMITX_AUDIO_96KHz   = 4, // 0x04
+        E_MAPI_RAPTORS_HDMITX_AUDIO_176KHz  = 5, // 0x05
+        E_MAPI_RAPTORS_HDMITX_AUDIO_192KHz  = 6, // 0x06
+    } EN_MAPI_RAPTORS_HDMITX_AUDIO_FREQUENCY_TYPE;// raptors audio frequency index
+    
+    sizeof(EN_MAPI_RAPTORS_HDMITX_AUDIO_FREQUENCY_TYPE) = 4    
+    
+
+85. 对于电视里动态画面（运动场景）的提高，则有赖于一个非常关键的芯片，叫做：FRC（Frame Rate Conversion，帧频转换）。
+基于运动检测与运动补偿（MEMC）原理，FRC 芯片可以把普通 60Hz 刷新率的影视内容提升到 120Hz 或者 240Hz 的刷新率，
+从而极大地提高运动画面的清晰程度。对于 3D 影视内容，这种高刷新率（120Hz/240Hz）尤为重要，否则您将会看到非常模糊且闪烁不定的 3D 画面。    
+
+86. Makefile如下，make后显示：3333.
+    1   .PHONY: all
+    2   all:
+    3   	@echo 1111
+    4   all:
+    5   	@echo 2222
+    6   all:
+    7   	@echo 3333
+
+    allan-yl.wang@tc-002:~/practise/make_all$ make
+    Makefile:5: warning: overriding commands for target `all'
+    Makefile:3: warning: ignoring old commands for target `all'
+    Makefile:7: warning: overriding commands for target `all'
+    Makefile:5: warning: ignoring old commands for target `all'
+    3333
+
+87. 当两条分支对同一个文件的同一个文本块进行了不同的修改，并试图合并时，Git不能自动合并的，称之为冲突(conflict)。解决冲突需要人工处理。
+　　比如当前在master分支，想把dev分支merge过来，结果产生了一个冲突，打开文件内容可以看到这么一个冲突：
+
+
+<<<<<<< HEAD
+test in master
+=======
+test in dev
+>>>>>>> dev
+
+
+　　<<<<<<<标记冲突开始，后面跟的是当前分支中的内容。
+　　HEAD指向当前分支末梢的提交。
+　　=======之后，>>>>>>>之前是要merge过来的另一条分支上的代码。
+　　>>>>>>>之后的dev是该分支的名字。
+
+88. $ git config --global alias.co checkout
+$ git config --global alias.ci commit
+$ git config --global alias.br branch
+$ git config --global alias.st status
+scp .repo.tar.gz cloud.yu@szbcsvru6408:/work/cloud.yu
+
+89. cmd 查看网络映射： net use
+    删除网络映射： net use Z: /delete
+    
+99. / # busybox cat /etc/
+blkid.tab       blkid.tab.old   recovery.fstab
+/ # busybox cat /etc/blkid.tab
+<device DEVNO="0x0801" TIME="1167654198" LABEL="SANDISK" UUID="D67F-B54A" TYPE="vfat">/dev/block/sda1</device>
+/ # busybox cat /etc/blkid.tab.old 
+<device DEVNO="0x0801" TIME="1167652946" LABEL="SANDISK" UUID="D67F-B54A" TYPE="vfat">/dev/block/sda1</device>
+/ # 
+
+100. MBoot autobuild：cp ./configs/monet/.config.monet.android.081b.rom_emmc.tee.ursa6 ./scripts/defconfig
+                      make defconfig;  make clean; make;
+                      
+101. Git由于在远端和本地都有一个代码库, 这样更新单个文件比SVN要麻烦一点.
+   正确的方法应该是先更新本地库(但不更新工作拷贝),然后用本地库来更新单个的工作拷贝文件.                      
+   git fetch
+   git checkout origin/master -- path/to/file
+   
+102. git fetch origin master
+     git log -p master..origin/master
+     git merge origin/master
+     以上命令的含义：
+   首先从远程的origin的master主分支下载最新的版本到origin/master分支上
+   然后比较本地的master分支和origin/master分支的差别
+   最后进行合并
+   上述过程其实可以用以下更清晰的方式来进行：
+   
+103. $ git log -p -2    -p 选项 展开显示每次提交的内容差异，用 -2 则仅显示最近的两次更新：
+     $ git log --stat                  --stat，仅简要的显示 文件 增改行数统计
+     $ git log  --author=haiwang                  --author 仅显示指定作者相关的提交。
+     
+     repo forall -c "git checkout -b _MARSHMALLOW_MUJI_0.0.4 MARSHMALLOW_MUJI_0.0.4"
+     
+104. $ su
+# am start com.android.tv.settings/.update.SystemLocalUpdateActivity     
+
+105. 最新的Python 3版本中，字符串是以Unicode编码的
+
+106. 具体AN用的那个gop，可通过dumpsys SurfaceFlinger来查看
+richard.du(Richard.Du) 2015-11-25 16:35:35
+window 0: gop=2 gwin=4 miu=0 addr=13be9000 fbid=0 
+allan-yl.wang(Allan-yl.wang) 2015-11-25 16:38:56
+window 1: gop=0 gwin=0 miu=0 addr=0 fbid=255 bufferW=0 bufferH=0  
+
+107. getprop 获取android 的property。
+
+108. FRC(Frame Rate Conversion)新技术， FRC帧率转换技术
+  FRC动画专家，使电视画面更加的自然流畅，进一步提高了动态清晰度。具体方法是对相邻的两幅画面的信号进行运算，由处理器生成介于两幅画面中间的过渡画面已达到更加流畅的视觉效果。
+
+109.  撤消未跟踪文件 git clean -dxf
+    清除所有未跟踪文件，包括纳入ignored的文件。如果要保留ignored的文件修改，使用参数-df  
+    
+110. 0x0E12 bit12没有清0。 51 or ARM 打印。
+1 ==> PM51
+0 ==> ARM
+加上把0x0E12 bit12置1的code，就可以看到sboot的打印了。
+
+111. MBoot:   MBOT-1106.0.1.Maserati.a9和MBoot:   MBOT-1106.0.1.Maserati.a10.1有甚麼差異 
+    git log MBOT-1106.0.1.Maserati.a9...MBOT-1106.0.1.Maserati.a10.1 --name-status
+    git log MBOT-1106.0.1.Maserati.a15^...MBOT-1106.0.1.Maserati.a16 --oneline --decorate
+
+112.Git提供了一个命令git reflog用来记录你的每一次命令
+
+113. arm frame buffer compression (afbc)
+
+114. 
+以下三行放到Makefile 最后
+$(info CROSS_COMPILE=$(CROSS_COMPILE))
+$(warning UBOOT_CROSS_COMPILE=$(UBOOT_CROSS_COMPILE))
+$(warning ROOTFS_PARTITION_SIZE = $$(($(ROOTFS_PARTITION_SIZE)-0x4000)))
+exit
+((表达式))，（（））里面可以是任意数据表达式。如果前面加入：”$”可以读取计算结果。
+[chengmo@centos5 ~]$ test=$((0x30-0x20))
+[chengmo@centos5 ~]$ echo $test
+[chengmo@centos5 ~]$ ((num=0xff)); 
+[chengmo@centos5 ~]$ echo $num;    
+255
+
+
+warning函数非常适合用来调试难以捉摸的makefile。因为warning函数会被扩展成空字符串，所以它可以放在makefile 中的任何地方：开始的位置、工作目标或必要条件列表中以
+
+
+
+
+115. git commit --allow-empty -m "Empty"
+     git commit -n  忽略行尾空格  ERROR: Your commit has trailing white space
+     
+116. UBoot如果定义了CONFIG_SYS_HUSH_PARSER ，命令接收和解析讲采用busybox 中的hush（对应hush.c）工具来实现与uboot原始的命令解析方法相比，
+    该工具更加智能。这里主要讲uboot中基于hush的命令解析流程。不过hush的实现太过复杂
+    
+117. make:  make -p -f /dev/null 可以打印出内置变量和内置规则 
+     -p          ：打印数据库，其中的数据来自读入makefile文件的结果；打印之后执行  make -p显示make变量数据库和隐含 规则的内容
+     -k          ：在出现错误后，尽可能的继续执行。也就是说当一个目标创建失败后，所有依靠它的目标文件将不能重建，而这些目标的其它依赖则可继续处理。
+     -n          ：打印要执行的命令，但却不执行它们。
+     -d          ：在正常处理后打印调试信息。
+     -p         或者—print-data-base  命令执行之前，打印出make读取的Makefile的所有数据（包括规则和变量的值），
+              同时打印出make的版本信息。如果只需要打印这些数据信息而不执行命令，可以使用 “make -qp”命令。
+              查看make执行前的隐含规则和预定义变量，可以使用命令 “make –p-f /dev/null”。
+     -q或者—question? 称为“询问模式”，不执行任何命令。Make只是返回一个查询状态值，返回的状态值为0表示没有目标需要重建，1表示存在需要重建的目标，2表示有错误发生。
+
+118.ARM汇编中立即数的构成规则：必须是一个8位的二进制数，前面补上24位二进制0，扩展为32位；然后将这个32位的扩展数首尾相连循环偶数位得到。
+ARM的data-processing instructions如何解析立即数有关的。每个指令32个bit，其中12个bit被用来表示立即数，其中8个bit是真正的数据，4个bit用来表示如何rotation
+0xff=00000000 00000000 00000000 11111111：相当于8位二进制11111111循环右移0位得到,合法；
+0x104=00000000 00000000 00000001 00000100：相当于8位二进制01000001循环右移2位得到，合法；
+0x101=00000000 00000000 00000001 00000001：包含所有1的部分是100000001，无法用一个8位二进制表示，非法；
+0x102=00000000 00000000 00000001 00000010：包含所有1的部分是10000001，但10000001只能循环右移奇数位得到给定的数，非法;
+0xfC000002 =11111100 00000000 00000000 00000010：相当于8位二进制10111111循环右移6位得到，合法。
+0x8000007E=10000000 00000000 00000000 01111110：包含所有1的部分是11111101，但10000001只能循环右移奇数位得到给定的数，非法。
+
+119. tar zcvf lollipop-mstar-master.tar.gz lollipop-mstar-master --exclude=.git --exclude=.repo --exclude=.ccache
+
+120. DDR trimming:DDR微调
+
+121. HDR, DVFS, Loacal Dimming
+
+122. DDR 大小自动适应：它的計算方式是利用 HW 寫超過 Dram 會繞回去的原理，所以當寫到 512M 的位置, 
+   應該要繞回去出現在 0x0 的位置
+   
+123. git log --no-merges --oneline --author=mstarsemi
+
+133. 假如我有一个文件abc.gz，大小为83456k，我想用dd命令实现如下备份 结果：首先将备份分成三个部分，第一部分为备份文件abc.gz的前10000k，第二部分为中间的70000k，最后备份后面的3456k. 
+
+备份方法如下三条命令： 
+dd if=abc.gz of=abc.gz.bak1 bs=1k count=10000
+dd if=abc.gz of=abc.gz.bak2 bs=1k skip=10000 count=70000 
+dd if=abc.gz of=abc.gz.bak3 bs=1k skip=80000 
+
+恢复方法如下：
+dd if=abc.gz.bak1 of=abc.gz
+dd if=abc.gz.bak2 of=abc.gz bs=1k seek=10000
+dd if=abc.gz.bak3 of=abc.gz bs=1k seek=80000
+理解说明:skip=xxx是在备份时对if 后面的部分也就是原文件跳过多少块再开始备份;seek=xxx则是在备份时对of 后面的部分也就是目标文件跳过多少块再开始写。
+
+134. DQS是内存和内存控制器之间信号同步用的。
+由DQ信号发出端发出DQS，信号接收端根据DQS的上、下沿来触发数据的接收。
+简单点说，如果是从内存中读取信号，那么主板北桥（内存控制器）根据内存发出的DQS来判断在什么时候接收读出来的数据。如果是写的话，就正好相反，内存根据北桥发出的DQS来触发数据的接收。
+DDR2每芯片有一个读、写双向的DQS，DDR3是有读和写两个DQS（2个DQS的好处是，不必等待DQS反向）。
+
+内核时钟*预读取位数*2=等效时钟频率。
+
+135. LDR  R0, [R1] 
+这条指令的意思是，将R1中的值作为地址，将地址里面存的值复制给寄存器R0
+
+STR R1,[R0]
+这条指令的意思是，将R1里面的值，复制到以R0里面的值作为地址的内存里面。
+
+136.Your identity is: allan-yl.wang <allan-yl.wang@mstarsemi.com>
+If you want to change this, please re-run 'repo init' with --config-name
+
+repo has been initialized in /work/allan-yl.wang/SourceCode/MBoot_Milan
+
+137.ll | wc -l   统计行数
+
+138. LDR  R0, [R1] 
+     将R1中的值作为地址，将地址里面存的值复制给寄存器R0
+     STR R1,[R0]
+     将R1里面的值，复制到以R0里面的值作为地址的内存里面。
+     
+139. 
+ldr r0, =(MS_BUS_RIU_ADDR + (0x103380 << 1))
+ldr r1, =0x12345678
+str r1, [r0]
+     
+    
+ldr r12, =(MS_BUS_RIU_ADDR + (0x103380 << 1))
+ldr r0, [r12]
+ldr r1, =(0x01<<6)
+orr r0, r0, r1
+str r0, [r12]
+
+把Mstar Reg 0x3004 里的值保存到Mstar Reg 0x103380：
+    ldr r0, =(MS_BUS_RIU_ADDR + (0x3004 << 1))
+    ldr r1, [r0]
+    ldr r12, =(MS_BUS_RIU_ADDR + (0x103380 << 1))
+    str r1, [r12]
+
+140. char *p = NULL;
+    int i =0;
+    memset(p,0x0, 0x10000);  //uboot直接死掉，没有dump reg信息
+
+141.R15（PC）总是指向“正在取指”的指令，而不是指向“正在执行”的指令或正在“译码”的指令。
+一般来说，人们习惯性约定将“正在执行的指令作为参考点”，称之为当前第一条指令，因此PC总是指向第三条指令。
+当ARM状态时，每条指令为4字节长，所以PC始终指向该指令地址加8字节的地址，即：PC值=当前程序执行位置+8；
+
+142. 二.PC值的变化
+    在中断时，会有一个保存LR的动作，但该值为当时PC的值，然后处理器会对LR进行一次自动调整，使LR=LR-0x04。所以，最终保存在LR中的值是中断发生时该语句的下一条。那么：
+ 1、软中断异常，即中断发生时的指令为SWI的话，从SWI中断，即软中断中返回后应该执行SWI语句的下一条，这条语句正好是LR中的地址。
+ 2、IRQ或FIQ异常中断时，需要重新执行中断发生时的语句，所以应该用LR-4。
+ 3、data abort数据中止异常中止，因为导致数据异常的原因应该是中断发生时语句的上一条语句，所以应该用LR-8
+ 4、Undefined未定义指令返回时LR。
+ 5、预取指令中止LR-4。
+ 
+143. lr(r14）的作用问题，这个lr一般来说有两个作用：
+    1》.当使用bl或者blx跳转到子过程的时候，r14保存了返回地址，可以在调用过程结尾恢复。
+    2》.异常中断发生时，这个异常模式特定的物理R14被设置成该异常模式将要返回的地址。
+    另外注意pc，在调试的时候显示的是当前指令地址，而用mov lr,pc的时候lr保存的是此指令向后数两条指令的地址，大家可以试一下用mov pc,pc，结果得到的是跳转两条指令，这个原因是由于arm的流水线造成的，预取两条指令的结果。
+子程序返回的三种方法
+    1.MOV PC，LR
+    2.BL LR
+    3.在子程序入口处使用以下指令将R14存入堆栈
+      STMFD SP,{,LR}
+      对应的，使用以下指令可以完成子程序的返回
+      LDMFD SP!,{,LR}
+      
+143. 相对于grep的查找，sed的编辑，awk在其对数据分析并生成报告时，显得尤为强大。
+awk 就是把文件逐行的读入，以空格为默认分隔符将每行切片，切开的部分再进行各种分析处理。awk '{print $5}'
+
+144. SecureCRT 抓的log可能会不全，Transfer -> Receive ASCII 抓的比较全。
+
+145. ARM在十几年前意识到安全问题对于移动产品的重要性，就推出TrustZone硬件安全解决方案，最近Linaro也开源了基于TrustZone实现的OP-TEE(Open Source Trust Execution Environment)
+
+146. 只有當處理器支援Security Extensions時,才會有這模式.
+ARM MON(Monitor)模式，可以透過SMC(Secure Monitor Call)指令,讓系統進入Secure Mode,或可透過設定Secure Configuration Register,
+ 讓系統所觸發的IRQ/FIQ/Abort都變成進入Secure Mode中處理.
+ 
+147. shell 字符串转换数字${{a}}
+
+148. 每一个gwin相当于一个dma窗口。每一个gwin联系到一块framebuffer。当gop的timing扫到某一个dma窗口的时候，
+该窗口就会从对应的framebuffer里面去抓data显示出来，盖在scaler content之上。还有一点需要注意，
+同一个gop里面的gwin相互之间不能做alpha blend(只能覆盖显示).不同的gop的gwin之间才能alpha blend(可透明显示).
+
+149. 
+
+find path -regex "xxx"
+find path -iregex "xxx"
+这两条命令都是运用base-regexp对文件路径进行匹配，iregex忽略大小写。
+但是给出的正则表达式必须要匹配完整的文件路径 
+比如：find / -regex "find" 这样子是找不到/usr/bin/find的，要像这样find / -regex ".*find"或者更精确一点find / -regex ".*/find"
+
+
+150. 现今的内核版本使用了Device Tree(DTB)：
+1）内核不再包含对硬件的描述，它以二进制的形式单独存储在另外的位置：the device tree blob
+2）bootloader需要加载两个二进制文件：内核镜像和DTB
+    内核镜像仍然是uImage或者zImage；
+    DTB文件在arch/arm/boot/dts中，每一个board对应一个dts文件；
+3）bootloader通过r2寄存器来传递DTB地址，通过修改DTB可以修改内存信息，kernel command line，以及潜在的其它信息；
+
+151. do_basic_setup()是一个很关键的函数，所有直接编译在kernel中的模块都是由它启动的
+    do_initcalls()用来启动所有在__initcall_start和__initcall_end段的函数，而静态编译进内核的modules也会将其入口放置在这段区间里。
+    跟根文件系统相关的初始化函数都会由rootfs_initcall（）所引用。注意到有以下初始化函数：
+    rootfs_initcall(populate_rootfs);
+    也就是说会在系统初始化的时候会调用populate_rootfs进行初始化。
+    
+152.
+$ git am PATCH
+Applying: PACTH DESCRIPTION
+error: patch failed: file.c:137
+error: file.c: patch does not apply
+error: patch failed: Makefile:24
+error: libavfilter/Makefile: patch does not apply
+Patch failed at 0001 PATCH DESCRIPTION
+When you have resolved this problem run "git am --resolved".
+If you would prefer to skip this patch, instead run "git am --skip".
+To restore the original branch and stop patching run "git am --abort".
+
+正如你所见，如果冲突发生，git只是输出上述信息，然后就停下来。一个小冲突会导致整个patch都不会被集成。
+在 .git/rebase-apply 目录下，存放着相应的补丁文件，名字是“0001”
+
+事实上，你可以使用 git apply 命令打patch（git apply 是git中的patch命令）。如同使用 patch -p1 命令时一样，
+然后手动解决代码冲突（检视生成的 .rej 文件，与冲突文件比较，修改冲突内容，并最终把文件加入到index中）：
+
+$ git apply PATCH --reject
+$ edit edit edit
+（译注：根据.rej文件手动解决所有冲突）
+$ git add FIXED_FILES
+$ git am --resolved
+
+
+git am 并不改变index，你需要使用 git apply --reject 打patch（保存在 .git/rebase-apply），
+手动解决代码冲突，（译注：使用 git status 列出所有涉及文件），把所有文件（不仅仅是引起冲突的文件）添加到（git add）index，
+最后告诉 git am 你已经解决（--resolved）了问题。这样做的好处是你不需要重新编辑commit信息。
+而且，如果你正在打的是一系列patch（就是说你在打的是多个patch，比如 git am *.patch）你不需要使用 git am --abort，然后又 git am。
+
+153. git format-patch <r1>..<r2>   两个commit间的修改（包含两个commit）
+  git format-patch -1 <r1>  单个commit
+  git format-patch HEAD^^ <==最近的2次commit的patch
+
+154.ARM9中，在进入主程序的时候是处在用户模式的，为了对寄存器进行配置必须进入特权模式，这时调用_call_swi()函数可以进入特权模式，
+我想请问一下，这个_call_swi(）函数是
+使用什么方法实现从用户模式到特权模式的切换的呢？
+访问 cpsr的 2条指令 msr mrs
+软件中断指令SWI，执行之后cpu就会进入Supervisor特权模式，这是由ARM的架构决定的
+
+155.TLB(Translation Lookaside Buffer)传输后备缓冲器 是一个内存管理单元用于 改进虚拟地址到物理地址转换速度的缓存。
+TLB是一个小的，虚拟寻址的缓存，其中每一行都保存着一个由单个PTE(Page Table Entry,页表)组成的块。如果没有TLB，则每次取数据都需要两次访问内存，即查页表获得物理地址和取数据
+TLB是为了更快的进行地址翻译而将部分的页表内容缓存到了Translation lookasid buffer中，避免了从main memory访问页表的过程。
+
+页表：VA ==》PA，为减少CPU访问内存次数，引入TLB。http://blog.chinaunix.net/uid-16361381-id-3044981.html
+逻辑地址（虚拟地址）==》"分段单元"==》线性地址==》”分页单元“==》物理地址
+RISC（如ARM）的MMU没有分段单元，只支持分页。
+
+156. ubi part UBILD
+ubi read 80200000 mpool
+usb start 0
+fatwrite usb 0 80200000 system.bin size [size(上一步log中打印出来的size)]
+
+157. 
+busybox mount -t cifs //172.21.34.212/work/allan-yl.wang /data/123 -o username="allan-yl.wang",password="mstar123;",iocharset=utf8,workgroup=OFFICENET;
+
+158.
+从Clinet上传文件到Server时，使用下面的命令:
+ tftp –p –r 目标文件名 -l 源文件名 服务器地址
+ tftp –p –r D.txt –l C.txt 192.168.1.2
+ 
+从Server下载文件到Client时,使用下面的命令:
+ tftp –g –l 目标文件名 –r 源文件名 服务器地址
+ tftp –g –l B.txt –r A.txt 192.168.1.2
+ 
+159. 一般标准的头文件路径为： cloud.yu@szbcsvru6408:/usr/include/linux$ 
+ 通过 gcc -v *.c 看编译时具体过程，里面有头文件搜索路径显示
+ 
+159. 页表：VA->PA  为减少CPU访问内存次数，引入TLB
+    TLB Translation Lookaside Buffer，旁路转换缓存，即页表缓存。
+    在内存的页表区里，每一条记录虚拟内存页面和物理内存页框 对应关系的记录成为：一个页表条目（Entry）
+
+160. Linux中可执行文件的代码段和数据段都是4K对齐的，所以分页管理的页框大小为4K。
+     一般RISC 架构（ARM）的MMU，只支持分页，不支持分段，逻辑地址(虚拟地址)=线性地址
+     MMU的主要工作只有一个，就是把虚拟地址映射成物理地址。
+     虚拟地址被MMU分为2个部分：1.页索引号（page index） 2.相对页首地址的偏移（offset）
+     
+161. Linux采用伙伴系统（buddy system)来解决碎片问题。
+把所有的空闲页框分组为11个块链表，每个块链表分别包含大小为1，2，4，8，16，32，64，128，256，512和1024个连续的页框。
+对1024个页框的最大请求对应着4MB大小的连续RAM块。每个块的第一个页框的物理地址是该块大小的整数倍。例如，大小为16个页框的块，其起始地址是16*2^12的倍数。
+内核试图把大小为b的一对空闲伙伴块合并为一个大小为2b的单独块。满足以下条件的两个块称为伙伴：
+两个块具有相同的大小，记作b
+他们的物理地址是连续的
+第一块的第一个页框的物理地址是2*b*2^12的倍数
+该算法是迭代的，如果它成功合并所释放的块，它会试图合并2b的块，以再次试图形成更大的块     
+     
+162. mooney 的第二路串口用的是uart_port2
+ruart_port2 ==> PIU_UART1 ===>reg_uart_sel2 ===>reg_thirduartmode====>PAD_GPIO9/PAD_GPIO10
+所以mboot下需要配置如下：
+git diff sboot/inc/mooney/board/BD_MST116B_10A_MOONEY.h
+-#define PADS_UART3_MODE DISABLE 
++#define PADS_UART3_MODE CONFIG_PADMUX_MODE1 
+git diff MstarCore/src/hal/mooney/sys/mhal_sys.c
+- *(volatile MS_U32*)(MS_RIU_MAP+(0x101EA6<<1)) = 0x0654;
++ *(volatile MS_U32*)(MS_RIU_MAP+(0x101EA6<<1)) = 0x0564;
+ 
+163. fork之后，子进程会拷贝父进程的数据空间、堆和栈空间（实际上是采用写时复制技术），二者共享代码段。
+所以在子进程中修改全局变量（局部变量，分配在堆上的内存同样也是）后，父进程的相同的全局变量不会改变。
+写时复制：直到父或子进程需要时才写页，把页的复制延迟到最后一刻。
+
+164. 僵尸进程：僵死进程，电脑术语。是指子进程退出时，父进程并未对其发出的SIGCHILD信号进行适当处理，
+导致子进程停留在僵死状态等待其父进程为其收尸，这个状态下的子进程就是僵死进程。
+
+在fork()/execve()过程中，假设子进程结束时父进程仍存在，而父进程fork()之前既没安装SIGCHLD信号处理函数调用waitpid()等待子进程结束，
+又没有显式忽略该信号，则子进程成为僵死进程，无法正常结束，此时即使是root身份kill -9也不能杀死僵死进程。
+补救办法是杀死僵尸进程的父进程(僵死进程的父进程必然存在)，僵死进程成为"孤儿进程"，过继给1号进程init，
+init始终会负责清理僵死进程。
+
+进程的析构是自身引起的，它发生在显示调用exit()系统调用；或隐式地从某个程序的主函数返回。
+C语言编译器会在main函数的返回点后面放置调用exit()的代码。
+
+165. fork在linux中是用clone实现的，其中clone的flags参数指定为SIGCHLD信号及所有清0的clone标志，
+  而它的child_stack参数是父进程当前的堆栈指针（此时父子进程共享同一个用户态堆栈）。但是，有写时复制机制，
+  通常只要父子进程中有一个试图去改变栈，则立即各自得到用户态堆栈的一份拷贝。
+  
+  轻量级进程由clone函数创建，允许父子进程共享进程在内核中的很多数据结构，如页表（即整个用户态地址空间），打开文件表及信号处理。
+  
+  vfork 创建的进程（确切说vfork创造出来的是线程）共享其父进程的内存地址空间。为防止父进程重写子进程需要的数据，阻塞父进程的执行，
+  直到子进程退出或执行exec()。
+       等于clone + CLONE_VM 和 CLONE_VFORK标志
+
+166. 进程必须的4要点：
+a. 要有一段程序供该进程运行，就像一场戏剧要有一个"剧本"，该程序可以被多个进程共享，多场戏剧用同一个剧本一样。
+b. 有起码的财产，就是进程专用的系统堆栈空间（2个连续的页框8K，这块内存中低地址放的是进程控制块task_struct）。
+c. 有户口，既进程控制块，task_struct。
+d. 有独立的存储空间。
+当一个进程缺少d条件时候，我们称其为线程。
+
+POSIX规定一个进程内部的多个thread要共享一个PID，但是，在linux kernel中，不论是进程还是线程，
+都是会分配一个task struct并且分配一个唯一的PID（这时候，PID其实就是thread ID）。
+这样，为了满足POSIX的线程规定，linux引入了线程组的概念，一个进程中的所有线程所共享的那个PID被称为线程组ID，
+也就是task struct中的tgid成员。在linux kernel中，sys_getpid系统调用，linux内核返回了tgid。
+sys_gettid系统调用，本意是要求返回线程ID，在linux内核中，返回了task struct的pid成员。
+一言以蔽之，POSIX的进程ID就是linux中的线程组ID。POSIX的线程ID也就是linux中的pid。
+
+
+int clone(int (*fn)(void *), void *child_stack, int flags, void *arg);
+这里fn是函数指针，我们知道进程的4要素，这个就是指向程序的指针，就是所谓的“剧本", 
+child_stack明显是为子进程分配系统堆栈空间（在linux下系统堆栈空间是2页面，就是8K的内存，其中在这块内存中，
+低地址上放入了值，这个值就是进程控制块task_struct的值）,flags就是标志用来描述你需要从父进程继承那些资源， 
+arg就是传给子进程的参数）。
+
+167.  arm-none-eabi-objdump -Dzx out/sboot.elf > objdump.txt 
+
+168.删除行尾空格和tab（$:行尾标志）：  sed -i -e 's/[ \t]*$//g' sed_test.txt
+    删除行头空格键和tab键（^[  \t]，是以空格或者tab键开头）：sed -i -e 's/^[ \t]*//g' sed_test.txt
+   替换为空格 将tab替换为空格 ： sed -i 's/\t/    /g' sed_test.txt
+    
+    
+    在某行的前一行或后一行添加内容(3333333333 为新加的字符串):
+    sed -i '/2222222222/i\3333333333' test.txt
+    sed -i '/2222222222/a\3333333333' test.txt
+
+    在sed中，可以使用别的字符来作为pattern的分隔符，即不再使用'/',例如:
+    sed 's/old/new/g' 可以被替换为 
+    sed 's,old,new,g'
+    需要注意的是，在第一种情况下，'/'是分隔符，因此它有特别的含义，因此如果pattern中出现了'/'，需要使用转移字符'\'。而在第2种情况下，'/'不再是分隔符，他不具有特殊的含义了，因此在pattern中可以直接使用了，而不用再加转移字符'\'，而','有了特殊作用，因此如果','出现在pattern中的时候，应该加上转移字符。
+    看如下例子：
+    echo $PATH | sed 's,.*/,,;'
+    上述命令的含义是将PATH中的path，即xxxxx/去掉，从而得到最终的文件名。
+	
+	Notepad++ 查找G1开头，S0结尾的字符串，并把G0替换成G0
+	Find:    (G1)(.*)(S0$)
+	Replace: (G0)\2\3
+	
+169. 内核控制路径kernel control path：表示内核处理系统调用，异常或中断所执行的指令序列。
+原子操作 atomic operation：单独的，不可中断的操作
+临界区 Critical Region
+  临界区[1]  指的是一个访问共用资源（例如：共用设备或是共用存储器）的程序片段，
+  而这些共用资源又无法同时被多个线程访问的特性。当有线程进入临界区段时，其他线程或是进程必须等待
+  （例如：bounded waiting 等待法），有一些同步的机制必须在临界区段的进入点与离开点实现，
+  以确保这些共用资源是被互斥获得使用，例如：semaphore。只能被单一线程访问的设备，例如：打印机。
+自旋锁 Spin lock: 单CPU环境无效。核心规则是：任何代码在持有自旋锁时，是原子性的，不能睡眠。不能因为任何原因放弃cpu。
+信号量 semaphore: 1.整形变量 2.等待进程链表 3.2个原子方法 up() down()
+                计数信号量 & 二值信号量，可以在一个进程中获取信号量，在另一个进程中释放信号量。
+mutex：只有持锁者才能解锁。在在嵌入式应用的RTOS里，mutex的实现还会考虑优先级翻转问题。
+互斥锁 和 互斥信号量区别：mutex只有持锁者才能解锁。
+
+
+Signal: 信号的本质是软件层次上对中断的一种模拟（软中断）。它是一种异步通信的处理机制，事实上，进程并不知道信号何时到来。
+信号处理函数的过程:
+(1)注册信号处理函数
+信号的处理是由内核来代理的，首先程序通过sigal或sigaction函数为每个信号注册处理函数，而内核中维护一张信号向量表，对应信号处理机制。
+这样，在信号在进程中注销完毕之后，会调用相应的处理函数进行处理。
+
+
+(2)信号的检测与响应时机
+在系统调用或中断返回用户态的前夕，内核会检查未决信号集，进行相应的信号处理。
+
+
+(3)处理过程:
+程序运行在用户态时->进程由于系统调用或中断进入内核->转向用户态执行信号处理函数->信号处理函数完毕后进入内核->返回用户态继续执行程序 
+
+首先程序执行在用户态，在进程陷入内核并从内核返回的前夕，会去检查有没有信号没有被处理，如果有且没有被阻塞就会调用相应的信号处理程序去处理。
+首先，内核在用户栈上创建一个层，该层中将返回地址设置成信号处理函数的地址，这样，从内核返回用户态时，就会执行这个信号处理函数。
+当信号处理函数执行完，会再次进入内核，主要是检测有没有信号没有处理，以及恢复原先程序中断执行点，恢复内核栈等工作，
+这样，当从内核返回后便返回到原先程序执行的地方了
+
+170. gcc      -c:只编译不链接,产生.o文件，就是obj文件，不产生执行文件
+              -o:指定输出文件名
+     makefile -O:大写，优化级别
+              -C: -C $(KDIR) 指明跳转到$(KDIR)目录下读取那里的Makefile
+
+    hello.c 预编译(-E) ==>hello.i 汇编(-S) ==>hello.S 编译(-c) ==》hello.o 链接 ==》hello.exe
+    ## 连接符，2个Token连接为一个Token
+    # 字符串化 ，替换后左右各加上双引号。
+    
+171. 如何利用展频技术改善电磁干扰
+    EMI是什么？电磁干扰（EMI）是一个电子设备邻近另一个电子设备所产生的射频（RF）频谱的电磁场工作中时所受到的干扰。
+    大到高压电塔，小到手机、汽车配件这样的小型电子产品中都会存在EMI，针对EMI的解决技术之一就是展频技术，
+    可以降低电子设备EMI的发生。
+    那么，什么是扩频时钟产生器（SSCG）？随着电子硬件工作速率增高/密度增高，EMI成为一项问题，电子硬件中的时钟产生器输出单个频率，
+    在此频率及高频时电磁辐射增大。而SSCG以轻微调制频率的方式，可抑制峰值振荡频率，从而解决这一问题。
+    
+172. 上下文：一个任务执行时，它使用 处理器/微控制器 的寄存器，访问RAM ROM。
+这些资源(处理器的寄存器，stack等)一起组成任务的执行上下文(the task execution context).
+保存一个被挂起的任务的上下文，并在任务恢复时，恢复其上下文的这个处理过程就叫做上下文切换（context switching）。
+
+进程上下文：一个进程在执行时，CPU的所有寄存器的值，进程的状态，以及堆栈中的内容。
+Linux内核工作在进程上下文或者中断上下文，提供系统调用服务的内核代码代表发起系统调用的
+应用程序运行在进程上下文。 中断处理程序，异步运行在中断上下文，中断上下文和特定的进程无关。
+
+
+173. ARM特权模式的特权：
+    USR模式是没有特权的,比如允许/禁止中断,你在USR模式就做不到
+    不好意思，我真的能做到
+    你能做到,要么利用SWI~~~~~~这其实已经不是USR模式,要么你那所谓的ARM是已经改动了的,那就已经远离了你的话题
+    感谢，我所说的可以开关中断指的是arm核外面的中断控制器的中断，arm核的irq和fiq中断确实是需要在系统模式下也就是通过swi来实现。
+    
+    引入了mmu，那么内存的访问是有权限位控制的，usr模式不能寻址特权模式的地址空间。
+    
+    linux内核正常工作在系统模式，只有进行中断服务时会进入中断、快速中断模式。用户程序就工作在用户模式。
+    
+174. asmlinkage是个宏，使用它是为了保持参数在stack中。
+
+看一下/usr/include/asm/linkage.h里面的定义：
+#define asmlinkage CPP_ASMLINKAGE __attribute__((regparm(0)))
+
+其中 __attribute__是关键字，是gcc的C语言扩展。
+
+__attribute__机制是GNU C的一大特色，它可以设置函数属性、变量属性和类型属性等。可以通过它们向编译器提供更多数据，帮助编译器执行优化等。
+__attribute__((regparm(0)))：告诉gcc编译器该函数不需要通过任何寄存器来传递参数，参数只是通过堆栈来传递。
+__attribute__((regparm(3)))：告诉gcc编译器这个函数可以通过寄存器传递多达3个的参数，这3个寄存器依次为EAX、EDX 和 ECX。更多的参数才通过堆栈传递。这样可以减少一些入栈出栈操作，因此调用比较快。
+
+asmlinkage大都用在系统调用中。有一些情况下是需要明确的告诉编译器，我们是使用stack来传递参数的，比如X86中的系统调用，是先将参数压入stack以后调用sys_*函数的，所以所有的sys_*函数都有asmlinkage来告诉编译器不要使用寄存器来编译，
+
+175. ARM特有的伪操作
+（1） .reg: 用来给寄存器赋予别名,格式如下:
+  别名 .req 寄存器名
+（2） .unreq: 用来取消一个寄存器的别名,格式如下:
+　　　　　　　.unreq 寄存器别名
+
+因为在C和ARM汇编程序间相互调用须遵守ATPCS规则。函数的前四个参数用r0-r3传递，之后的参数5 6 用栈传递，
+所以前5句指令的作用正如注释所说，是调整参数存储位置方便C函数调用。
+
+176. Linux内核本身不是以进程形式存在的，最多在初始化的过程中表现得就像一个进程，但是内核绝对没有进程的数据结构task_struct，
+可以严格跟进程区分开 。自从创建init 进程之后，内核就不再主动占有cpu了。只有当进程主动要求和中断到来时，
+内核才动一动，很快又把cpu还给合适的进程，不是想象中的，以后台服务进程的形式存在。
+
+177. 内核本身不是以进程形式存在的，最多在初始化的过程中表现得就像一个进程，但是内核绝对没有进程的数据结构task_struct，
+可以严格跟进程区分开 。自从创建init 进程之后，内核就不再主动占有cpu了。
+只有当进程主动要求（系统调用）和中断到来时，内核才动一动，很快又把cpu还给合适的进程，不是想象中的，以后台服务进程的形式存在。
+
+Linux上进程分3种，内核线程（或者叫核心进程）、用户进程、用户线程
+内核线程（thread）或叫守护进程(daemon)， 没有独立的地址空间，即task_struc.mm = NULL。
+
+178.  read 有3个特点：
+      1.read的行为是一种阻塞的系统调用（堵在这，直到拿到数据为止）；
+      2.以内核为缓冲，从内核到用户内存进行了一次内存拷贝（而内存拷贝是很占用CPU的）
+      3. 没有显示地通知使用者从文件的哪个位置开始去读。使用者需要利用文件指针，通过lseek之类的系统调用来指定位置。
+         （在多线程的情况下，多个线程要同时读同一个文件的不同地址时，要对文件指针加锁）
+         
+      mmap同时存在着两个重要的问题：
+      1. cache命中率不如read；
+      2. 在线程模型下互斥十分严重
+      
+179. 桌面到文本的切换：
+Ctrl+Alt+F1，切到文本界面，执行Ctrl+c，结束掉刚才启动的X server！
+1）: 运行 sudo vi /etc/default/grub
+2）: 找到 GRUB_CMDLINE_LINUX_DEFAULT=”quiet splash”
+3）: 改为 GRUB_CMDLINE_LINUX_DEFAULT=”quiet splash text”
+4）: 运行 sudo update-grub
+上面把“GRUB_CMDLINE_LINUX_DEFAULT=”quiet splash””中的”quiet splash”改为text也是文本登陆的！      
+      
+180. vmalloc和kmalloc区别
+   1.kmalloc对应于kfree，分配的内存处于3GB～high_memory之间，这段内核空间与物理内存的映射一一对应，
+     可以分配连续的物理内存； vmalloc对应于vfree，分配的内存在VMALLOC_START～4GB之间，分配连续的虚拟内存，但是物理上不一定连续。
+   2.vmalloc() 分配的物理地址无需连续，而kmalloc() 确保页在物理上是连续的 
+   3.kmalloc分配内存是基于slab，因此slab的一些特性包括着色，对齐等都具备，性能较好。物理地址和逻辑地址都是连续的。 
+   4.最主要的区别是分配大小的问题，比如你需要28个字节，那一定用kmalloc，如果用vmalloc，分配不多次机器就罢工了。 
+    
+    尽管仅仅在某些情况下才需要物理上连续的内存块，但是，很多内核代码都调用kmalloc()，而不是用vmalloc()获得内存。
+    这主要是出于性能的考虑。vmalloc()函数为了把物理上不连续的页面转换为虚拟地址空间上连续的页，必须专门建立页表项。
+    还有，通过 vmalloc()获得的页必须一个一个的进行映射（因为它们物理上不是连续的），这就会导致比直接内存映射大得多的缓冲区刷新。
+    因为这些原因，vmalloc()仅在绝对必要时才会使用，最典型的就是为了获得大块内存时，
+    例如，当模块被动态插入到内核中时，就把模块装载（insmod）到由vmalloc()分配的内存上。
+
+内核地址空间分布：http://www.cnblogs.com/bizhu/archive/2012/10/09/2717303.html
+                 http://blog.csdn.net/tommy_wxie/article/details/17122923/ （高端内存详解）
+内核是如何借助128MB高端内存地址空间是如何实现访问可以所有物理内存
+高端内存的最基本思想：借一段虚拟地址空间，建立和物理地址的临时地址映射，用完后释放，达到这段地址空间可以循环使用，
+访问所有物理内存。
+
+万一有内核进程或模块一直占用某段逻辑地址空间不释放，怎么办？若真的出现的这种情况，则内核的高端内存地址空间越来越紧张，
+若都被占用不释放，则没有建立映射到物理内存都无法访问了。
+
+  MMU 必须通过读取控制寄存器CR3中的值作为当前页面目录（PGD）的指针，进而根据分页内存映射机制（参看相关文档）将该虚拟地址
+  转换为真正的物理地址才能让CPU真 正的访问到物理地址。
+    Q&A
+    32位系统用户进程最大可以访问3GB，内核代码可以访问所有物理内存。
+    64位系统用户进程最大可以访问超过512GB，内核代码可以访问所有物理内存。
+    对于32位的Linux，其每一个进程都有4G的寻址空间，但当一个进程访问其虚拟内存空间中的某个地址时又是怎样实现不与其它进程的虚拟空间混淆 的呢？每个进程都有其自身的页面目录PGD，Linux将该目录的指针存放在与进程对应的内存结构task_struct.(struct mm_struct)mm->pgd中。每当一个进程被调度（schedule()）即将进入运行态时，Linux内核都要用该进程的PGD指针设 置CR3（switch_mm()）
+    每个进程虚拟空间的3G~4G部分是相同的(内核空间)  
+    *进程从用户态进入内核态不会引起CR3的改变但会引起堆栈的改变
+    
+181. stdin类型为 FILE*,属于标准I/O，高级的输入输出函数。在<stdio.h>
+     STDIN_FILENO(0)类型为 int, 文件描述符,是非负整数，一般定义为0, 1, 2，属于没有buffer的I/O，直接调用系统调用，在<unistd.h>。
+     
+     使用stdin的函数主要有：fread、fwrite、fclose等，基本上都以f开头
+     使用STDIN_FILENO的函数有：read、write、close等
+     1.  标准输入  (stdin) ：代码为 0 ，使用 < 戒 << ； 
+     2.  标准输出  (stdout)：代码为 1 ，使用 > 戒 >> ； 
+     3.  标准错诨输出(stderr)：代码为 2 ，使用 2> 戒 2>> ； 
+     
+182.我们希望将其在后台启动，可以在启动参数的时候加一个'&'实现这个目的。
+
+    tianfang > run &
+    [1] 11319
+    tianfang >
+
+    进程切换到后台的时候，我们把它称为job。切换到后台时会输出相关job信息，以前面的输出为[1] 11319例：[1]表示job ID是1,11319表示进程ID是11319。
+    切换到后台的进程，仍然可以用ps命令查看：
+    可以通过jobs命令只查看所有job（后台进程）：
+    
+183. 对于32位的Linux，其每一个进程都有4G的寻址空间，但当一个进程访问其虚拟内存空间中的某个地址时又是怎样实现不与其它进程的虚拟空间混淆 的呢？
+每个进程都有其自身的页面目录PGD，Linux将该目录的指针存放在与进程对应的内存结构task_struct.(struct mm_struct)mm->pgd中。
+每当一个进程被调度（schedule()）即将进入运行态时，Linux内核都要用该进程的PGD指针设 置CR3（switch_mm()）。
+
+linux中的分段分页机制分三层，页目录（PGD），中间目录(PMD)，页表(PT)。PT中的表项称为页表项（PTE）
+但是arm结构的MMU在硬件只有2级映射，所以在软件上会跳过PMD表。即：在PGD中直接放的是PT的base address。
+
+184. mm  mmm只會build本身這個module
+mma mmma會連這個module需要的module都一起build
+  mma     如果你未曾完整编译过整个android工程，那么在使用mm或者mmm的时候可能会遇到无法找到某些依赖库的情况，
+  这时你可以用mma进行编译，它会同时编译你所需要的依赖库，只要进行一次mma编译就可以了，后续可直接使用mm或者mmm来编辑。
+  
+  feng.lin(feng.lin) 2017-01-04 14:42:51
+mk的寫法的關係
+feng.lin(feng.lin) 2017-01-04 14:43:18
+因為 本來recovery是 透過被引用 而來build的
+mmm的話 則是主動去trigger要build什麼
+feng.lin(feng.lin) 2017-01-04 14:43:39
+前者是看 被引用是需要哪一種而去build那種
+後者是 看mk的寫法決定怎麼build
+
+185. mount -t vfat /dev/sdb /mnt/usb
+busybox mount -t vfat /dev/block/sda1 /mnt/usb/sda1
+cat /proc/partitions
+
+186. 我们都知道以太网设备比如网卡都有自己全球唯一的MAC地址，它们是以MAC地址来传输以太网数据包的，但是它们却识别不了我们IP包中的IP地址，所以我们在以太网中进行IP通信的时候就需要一个协议来建立IP地址与MAC地址的对应关系，以使IP数据包能发到一个确定的地方去。这就是ARP(Address Resolution Protocol，地址解析协议)。
+
+187. RPMB（Replay Protected Memory Block）Partition 是 eMMC 中的一个具有安全特性的分区。
+eMMC 在写入数据到 RPMB 时，会校验数据的合法性，只有指定的 Host 才能够写入，同时在读数据时，也提供了签名机制，保证 Host 读取到的数据是 RPMB 内部数据，而不是攻击者伪造的数据。
+RPMB 在实际应用中，通常用于存储一些有防止非法篡改需求的数据，例如手机上指纹支付相关的公钥、序列号等。RPMB 可以对写入操作进行鉴权，但是读取并不需要鉴权，任何人都可以进行读取的操作，因此存储到 RPMB 的数据通常会进行加密后再存储。
+
+188. 
+中断处理函数应该避免调用不可重入函数, 因为新的中断可能发生并打断正在执行任务中，如果当前任务调用了一些不可重入的函数,将会产生错误。
+一些常用库函数如printf，malloc，free等都是不可重入函数,因为在函数中引用了全局变量, 这个道理因该恨容易明白了吧?:wink:
+例如, printf会引用全局变量stdout，malloc，free会引用全局的内存分配表。
+
+
+189.
+     eg. Maserati 114D
+     PIU_UART0 ==> port0
+     PIU_UART2 ==> port1 ==> PAD_GPIO3/4 (TX1/RX1)
+     PIU_UART1 ==> port2 ==> PAD_GPIO21/22 (TX2/RX2)
+     
+     eg. Maserati 095D
+     PIU_UART0 ==> port0
+     PIU_UART2 ==> port1 ==> PAD_GPIO3/4 (TX1/RX1)
+     PIU_UART1 ==> port5 ==> PAD_GPIO34/35 (TX5/RX5)
+     #if defined(CONFIG_MSTAR_BD_MST095D_10AVPC_MASERATI) && defined(CONFIG_HDMITX_MSTAR_ROCKET2)
+    *(volatile MS_U32*)(MS_RIU_MAP+(0x101EA6<<1)) = 0x0064; // uart_sel0 = PIU UART0
+    *(volatile MS_U32*)(MS_RIU_MAP+(0x101E04<<1)) = 0x0300; //
+    *(volatile MS_U32*)(MS_RIU_MAP+(0x101EA8<<1)) = 0x0050; // uart_sel5 = PIU UART1
+    *(volatile MS_U32*)(MS_RIU_MAP+(0x100B28<<1)) = 0x0c0c; // uart 1 clk
+    
+      _RVM1(0x1ea6, ((UART1_SRC_SEL << 4) | UART0_SRC_SEL), BITMASK(7:0)),
+      _RVM1(0x1ea7, ((UART3_SRC_SEL << 4) | UART2_SRC_SEL), BITMASK(7:0)),
+      _RVM1(0x1ea8, ((UART5_SRC_SEL << 4) | UART4_SRC_SEL), BITMASK(7:0)),
+
+#define UART_SEL_HK_R2          0x00
+#define UART_SEL_VD_MHEG5       0x02
+#define UART_SEL_TSP            0x03
+#define UART_SEL_PIU_UART0      0x04
+#define UART_SEL_PIU_UART1      0x05
+#define UART_SEL_PIU_UART2      0x06
+#define UART_SEL_PIU_FAST_UART  0x07
+#define UART_SEL_DMD_MCU51_TXD0 0x08
+#define UART_SEL_DMD_MCU51_TXD1 0x09
+#define UART_SEL_VD_MCU51_TXD0  0x0A
+#define UART_SEL_VD_MCU51_TXD1  0x0B
+#define UART_SEL_AUDIO_R2       0x0C
+#define UART_SEL_SECURE_R2      0x0D
+
+    busybox stty -F /dev/ttyS2 ispeed 115200 ospeed 115200
+    
+    
+    0x0E12(8bit)=0x0C00 mboot du ==> 0x0E12(8bit)= 0x0400 
+    ==> du disable uart rx
+    
+    
+    PIU_UART2: baud rate = (serial clock freq) / (16 * divisor)
+              0x110620 (divisor)
+              0x100B14 bit8~bit12 (serial clock freq)
+    drivers\tty\serial\serial_core.c\uart_register_driver()
+
+wifi: 785vv587
+
+190. 检测jpeg图片是否为baseline格式，在linux里敲：identify -verbose filename.jpg | grep Interlace
+如果输出 None 说明是baseline格式。
+
+191. HK houseKeeping PM51
+
+192. __attribute__((section("section_name")))
+其作或用是将作用的函数数据放入指定名为"section_name"输入段。
+
+#define __init  __attribute__ ((__section__ (".init.text")))  __cold
+__init 宏最常用的地方是驱动模块初始化函数的定义处，其目的是将驱动模块的初始化函数放入名叫.init.text的输入段。
+当内核启动完毕后，这个段中的内存会被释放掉供其他使用。
+
+193. 内核组件用__setup宏来注册关键字及相关联的处理函数，__setup宏在include/linux/init.h中定义，其原型如下：
+__setup(string, function_handler)
+其 中：string是关键字，function_handler是关联处理函数。__setup只是告诉内核在启动时输入串中含有string时，内核要去 执行function_handler。String必须以“=”符结束以使parse_args更方便解析。紧随“=”后的任何文本都会作为输入传给 function_handler。
+下面的例子来自于net/core/dev.c，其中netdev_boot_setup作为处理程序被注册给“netdev=”关键字：
+__setup("netdev=", netdev_boot_setup);
+不 同的关键字可以注册相同的处理函数，例如在net/ethernet/eth.c中为“ether =”关键字注册了同样的处理函数 netdev_boot_setup。当代码作为模块被编译时，__setup宏被忽视，你可以在include/linux/init.h中看到 __setup宏是怎样变化的，不管后续包含它的文件是否是模块，include/linux/init.h都是独立的。
+start_kernel两次调用parse_args解析启动配置字符串的原因是启动选项事实上分为两类，且每次调用值能够兼顾到其中一类：
+
+194. I2S GPIO 输入模式，高阻态 电压1.3v，输出电流34uA；待机2V 10uA。
+
+195.  1.根据中断来源，可以分为内部中断，外部中断。内部中断的中断源来自cpu内部（swi，溢出，除法错误等。）外部中断的中断源来自CPU外部，由外设提出的请求。
+      2.采用向量中断的cpu为不同的中断分配不同的中断号。当检查到某个中断到来后，自动跳到与该中断号对应的运行地址。
+      3.Linux将中断处理程序分解为两个半部：顶半部（Top Half）和底半部（Bottom Half)。
+         顶半部用于完成尽量少的比较紧急的功能，它往往只是简单地读取寄存器中的中断状态，并在清除中断标志后就进行“登记中断”的工作
+           request_irq() irq-申请硬件中断号，handler-向系统登记的中断处理函数（顶半部），是一个回调函数，系统调用这个函数。
+         底半部几乎做了中断处理程序所有的事情，而且可以被新的中断打断
+      4.Linux实现底半部的机制主要有tasklet、工作队列、软中断和线程化irq。
+          a.tasklet （基于softirq实现的）的使用较简单，它的执行上下文是软中断(softirq 不允许睡眠)，执行时机通常是顶半部返回的时候。
+          b.工作队列的使用方法和tasklet非常相似，但是工作队列的执行上下文是内核线程，因此可以调度和睡眠。
+          c.软中断（Softirq）也是一种传统的底半部处理机制，它的执行时机通常是顶半部返回的时候，tasklet是基于软中断实现的，因此也运行于软中断上下文。一般驱动的编写者不会也不宜直接使用softirq。
+          d.thread_irq request_threaded_irq(),内核会为相应的中断号分配一个对应的内核线程。参数handler对应的函数执行于中断上下文，thread_fn参数对应的函数则执行于内核线程。
+          总结一下硬中断、软中断和信号的区别：硬中断是外部设备对CPU的中断，软中断是中断底半部的一种处理机制，
+          而信号则是由内核（或其他进程）对某个进程的中断。
+
+          软中断以及基于软中断的tasklet如果在某段时间内大量出现的话，内核会把后续软中断放入ksoftirqd内核线程中执行。
+          总的来说，中断优先级高于软中断，软中断又高于任何一个线程。软中断适度线程化，可以缓解高负载情况下系统的响应。
+          
+      中断上下文的代码就要受一些限制，不能做下面的事情：
+        1、睡眠或者放弃CPU。
+        2、尝试获得信号量
+        3、执行耗时的任务
+        4、访问用户空间的虚拟地址。因为中断上下文是和特定进程无关的，它是内核代表硬件运行在内核空间，
+           所以在终端上下文无法访问用户空间的虚拟地址
+
+196. selinux：
+      mangosteen:/ $ getenforce                                                      
+      Permissive
+      
+    enforcing：强制模式，代表 SELinux 运作中，且已经正确的开始限制 domain/type 了
+    permissive：宽容模式：代表 SELinux 运作中，不过仅会有警告讯息并不会实际限制 domain/type 的存取。这种模式可以运来作为 SELinux 的 debug 之用；
+    disabled：关闭，SELinux 并没有实际运作。
+
+197. android toolbox 中log 工具
+     发送log：log -t recovery "Installing new recovery image"
+     接收log：logcat -s recovery
+     logcat -s MiSysSrv
+     
+     logcat --pid
+     logcat --help
+
+198.  Step 10: mkdir ../kernel_ko;
+      Step 11: find -L ./ -name "*.ko" -exec cp {} ../kernel_ko \;
+      Step 12: cp arch/arm/boot/zImage ../kernel_ko/;
+      Step 13: ## Get Image in arch/arm/boot/zImage
+
+199.系统进recovery升级 ：$ su
+# am start com.android.tv.settings/.update.SystemLocalUpdateActivity、、
+
+200. udev的开发者认为，linux应该在设备被发现的时候加载驱动模块，而不是当他被访问的时候。
+    devfs所提供的打开/dev节点时自动加载驱动的功能对一个配置正确的计算机来说有点多余。系统中所有的设备都应该
+    产生热插拔事件，并加载恰当的驱动，而udev能注意到这点并且为它创建对应的设备节点。
+    
+201. 将/home/study/test目录中，除test1和test2目录外，其他所有的文件和文件夹copy到/home/copydir
+     方法：
+     1. cd /home/study/test
+     2. rsync -av --exclude  test1/ --exlclude test2/  ../test/  /home/copydir
+
+202. 总线 bus_type，设备 device，设备驱动 device_driver，可以认为是koject的派生类。
+    kobject可以看出是所有总线，设备，设备驱动的抽象基类。1个kobject对应sys中的一个目录。
+    而目录中的文件来源于attribute。
+    总线、设备和驱动中的各个attribute则直接落实为sysfs中的1个文件，attribute会伴随着show（）和store（）这两个函数，分别用于读写该attribute对应的sysfs文件
+    
+203. rsync -av --exclude=a --exclude=b rsync/ rsync_test/    排除 a ，b 文件
+
+O_CLOEXEC  FD_CLOEXEC
+
+
+
+204. I2C 
+    1，SCL一直由Master控制，SDA依照数据传送的方向，读数据时由Slave控制SDA，写数据时由Master控制SDA。
+       当8位数据传送完毕之后，应答位或者否应答位的SDA控制权与数据位传送时相反。
+    2, 开始位“Start”和停止位“Stop”，只能由Master来发出。
+    
+205. $(info hello = $(TOPDIR))
+
+206. sh -x mkupdate.sh  shell执行步骤
+
+207. busybox dd if=/dev/block/sda1 bs=512 count=1 | busybox hexdump -C
+
+208. http://xineohpanihc.iteye.com/blog/1148741
+vim+xxd=强大的十六进制编辑器
+
+下面举一个例子，备份我们的MBR。
+sudo dd if=/dev/sda of=~/mbr.backup bs=512 count=1
+题外话：其中含有分区表，这时我们可以利用这个命令恢复我们的MBr:
+sudo dd if=~/mbr.backup of=/dev/sda bs=512 count=1
+sudo dd if=~/mbr.backup of=/dev/sda bs=1 count=66 seek=446(恢复分区表)
+好了，这个就是我们的MBR文件，是二进制的。
+
+再在vim 命令模式下输入：
+:%!xxd #参数%指当前所编辑的文件 
+编辑完了以后，我们需要还原为二进制文件:
+:%!xxd -r #参数-r是指将当前的十六进制转换为二进制
+好了，保存退出:
+:wq
+
+
+在linux下用vim打开jpg文件，使用％！xxd进行16进制显示时，文件头显示为"3f3f 
+3f3f 0011 0804"文件尾端显示为 "3f3f 
+0a"；而同样的操作在windows下，就显示为"ffd8 ffc0 0011 0804"和 "ffd9 
+
+打开.vimrc配置项，屏蔽掉下面这句话：
+set fileencodings=utf-8,gb2312,gbk,gb18030,ucs-bom
+再用vim打开jpeg文件，显示"ffd8 ffc0 0011 0804"和 "ffd9 0a"， 
+显示正确。
+原来，为了支持识别和显示中文，我规定了vim的fileencodings, 
+当vim打开文件时，会使用规定的编码格式对数据进行解析，可惜jpeg的文件头FFD8、尾FFD9 
+不是任何一个中文的编码，vim找不到对应的中文字，就显示为？？，即：3f3f。
+
+
+
+209. HDMI 24HZ 30Hz 60Hz ==> 480i60Hz NTSC
+          25 50          ==》576i50Hz PAL
+          
+210. git tag -a PM-100.0.2.C2P -m PM-100.0.2.C2P      
+
+211. 板子上挂在PC上的nfs 目录：
+1. PC上打开FreeNFS.exe 工具
+2. busybox ifconfig eth0 172.21.19.76
+3. busybox mount -t nfs 172.21.18.76:/ /mnt -o nolock
+
+busybox umount -fl /data  ==> 强制umount
+
+板子上挂载samba:
+su \n busybox mount -t cifs //172.21.34.232/users /data/123 -o username="allanyl.wang",password="mstar123;",iocharset=utf8,workgroup=OFFICENET; \n
+
+挂载szfile01到server:
+sudo mount -t cifs -o username="mstarsemi/crystal.xue",password="xxxxxx",uid=crystal.xue,gid=crystal.xue //szfile01/G_HQ_Mooney_AN_DTMB /home/crystal.xue/szfile01/mooney
+
+
+222. STR reg
+     STB  AC ==> 0x0E6F=0xff
+          DC ==> 0x0E6F=0x02
+                        0x01
+
+     TV      AC ==> 0x0E71=0xFF
+     DC 二次待机 ==> 0x0E71=0xF1
+                            0x01  standby
+                            0x02  sleep
+                            0x03  deepsleep
+
+STR reg resume: 0x0EA4=0x2021
+
+223. bandwidth frequency（MHZ） = 2133/8 或 2133/4 
+
+234. echo "boot-recovery\0" > /dev/block/platform/mstar_mci.0/by-name/misc 进recovery
+
+235. bmp 图片像素排列：BGRA BGR
+
+236. 每个block前2个page oob的第一和第二个字节 !=0xff，则为坏块
+
+CIS是假坏块,只是在bbt里标成坏块了
+
+//small page(512B)和large page的nand flash它们的坏块标记存放位置是不一样的，具体参数还是要阅读flash的硬件手册为准，
+一般sp是第6个字节，lp是前2个字节；
+
+237. EL : exception level
+     SMC: Secure Monitor Calls
+     
+
+238. 
+Linux expect
+
+
+Linux declare命令	
+
+Linux losetup命令用于设置循环设备。
+循环设备可把文件虚拟成区块设备，籍以模拟整个文件系统，让用户得以将其视为硬盘驱动器，光驱或软驱等设备，并挂入当作目录来使用。
+
+239.  man
+    1、Standard commands （标准命令）
+    2、System calls （系统调用）
+    3、Library functions （库函数）
+    4、Special devices （设备说明）
+    5、File formats （文件格式）
+    6、Games and toys （游戏和娱乐）
+    7、Miscellaneous （杂项）
+    8、Administrative Commands （管理员命令）
+    9 其他（Linux特定的）， 用来存放内核例行程序的文档。
+
+240. 
+mount -t nfs 192.168.13.159:/home/wyl/work/laserbox/laserservice/build/bin /tmp -o nolock  \n
+mount -t nfs 201.234.3.2:/ /mnt -o nolock  \n
+
+
+241.  sed -i -e "s#ttyS0::respawn:/usr/sbin/mklaser#test#g" inittab 
+sed -i -e "s\ttyS0::respawn:/usr/sbin/mklaser\test\g" inittab 
+
+sed -i "s#\#ttyS0::respawn:/usr/sbin/mklaser#ttyS0::respawn:/usr/sbin/mklaser#g" /etc/inittab
+sed -i "s#ttyS0::respawn:/usr/sbin/mklaser#\#ttyS0::respawn:/usr/sbin/mklaser#g" /etc/inittab 
+
+242. wpa_supplicant 是一个较好的选择，但缺点是它不支持所有的驱动。请浏览wpa_supplicant网站获得它所支持的驱动列表。
+另外，wpa_supplicant目前只能连接到那些你已经配置好ESSID的无线网络，它可以让您连接到那些使用WPA的AP。
+wireless-tools支持几乎所有的无线网卡和驱动，但它不能连接到那些只支持WPA的AP。
+
+Wireless Tools包括以下工具：
+		iwconfig：设置基本无线参数
+        iwlist：扫描、列出频率，比特率，密钥等
+        iwspy：获取每个节点链接的质量(只能查阅与之相连的节点)
+        iwpriv：操作Wireless Extensions 特定驱动
+        ifrename： 基于各种静态标准命名接口
+
+wpa_supplicant是一个连接、配置WIFI的工具，它主要包含wpa_supplicant与wpa_cli两个程序。
+通常情况下，可以通过wpa_cli来进行WIFI的配置与连接，如果有特殊的需要，
+可以编写应用程序直接调用wpa_supplicant的接口直接开发。
+
+启动wpa_supplicant应用:
+	$ wpa_supplicant -D nl80211 -i wlan0 -c /etc/wpa_supplicant.conf -B
+	/etc/wpa_supplicant.conf文件里，添加下面代码:
+		ctrl_interface=/var/run/wpa_supplicant
+		update_config=1
+
+启动wpa_cli应用:
+	$ wpa_cli -i wlan0 scan             // 搜索附近wifi网络
+	$ wpa_cli -i wlan0 scan_result      // 打印搜索wifi网络结果
+	$ wpa_cli -i wlan0 add_network      // 添加一个网络连接
+
+SSID是Service Set Identifier的缩写，意思是：服务集标识。SSID技术可以将一个无线局域网分为几个需要不同身份验证的子网络，
+每一个子网络都需要独立的身份验证，只有通过身份验证的用户才可以进入相应的子网络，防止未被授权的用户进入本网络。
+通俗地说，SSID便是你给自己的无线网络所取的名字
+
+通常，手机WLAN中，bssid其实就是无线路由的MAC地址.
+
+　　ESSID 也可认为是SSID, WIFI 网络名
+
+243. 	
+#include <pthread.h>
+#include <unistd.h>
+tid = pthread_self();
+pthread_getname_np(tid, thread_name, 32);
+
+	char tname[32];
+	prctl(PR_GET_NAME, tname);
+
+syscall(SYS_gettid)
+
+	#include <unistd.h>
+	char tname[32] = {0};
+	prctl(PR_GET_NAME, tname);
+	LOG_DEBUG("Allan StatusReportClient::onMsg tid = %d, tname = %s  \n", syscall(SYS_gettid), tname);
+
+245. 在TCP/IP协议中，“IP地址+TCP或UDP端口号”唯一的标识网络通讯中的一个进程，“IP地址+TCP或UDP端口号”就为socket。
+TCP/IP协议规定：网络数据流应采用大端字节序，即低地址高字节。 
+
+246. 网络层的“ip地址”可以唯一标识网络中的主机，而传输层的“协议+端口”可以唯一标识主机中的应用程序（进程）。
+这样利用三元组（ip地址，协议，端口）就可以标识网络的进程了，网络中的进程通信就可以利用这个标志与其它进程进行交互。
+
+247.  netstat  -ap 
+
+248. M STM32 先把Gcode指令缓存到buffer里按顺序执行。
+    R STM32 立即执行该Gcode指令。
+
+249. 
+NAT 模式： 让虚拟系统借助 NAT （网络地址转换）功能， 通过宿主机器所在的网络来访问公网。 
+    也就是说， 使用 NAT 模式可以实现在虚拟系统里访问互联网。 
+	NAT 模式下的虚拟系统的 TCP / IP 配置信息是由VMnet8 虚拟网络的 DHCP 服务器提供的， 
+	本局域网中的其他真实主机无法 ping 通虚拟系统。
+
+桥接模式： 在这种模式下， VMWare 虚拟出来的操作系统就像是局域网中的一台独立的主机， 它可以访问局域网内任何一台机器。
+
+250.
+二、嵌入式下coredump生成设置
+
+	1.一般linux系统下默认是不会生成core dump文件的（毕竟生成的文件还是蛮大的），
+	通过ulimit –a （如下图所示）可以查看能生成的code文件的大小，一般是0。
+	可以通过“ulimit –c 参数（blocks）”或者“ulimit –c unlimited”设置，建议用后者。
+
+	2.设置core dump文件的输出位置，一般默认是当前目录，可以通过“echo “1” > /proc/sys/kernel/core_user_pid 
+	”使core文件加上pid号，也可以用“echo ”core保存目录/core-%e-%p-%t“ > /proc/sys/kernel/core_pattern ” 设置。
+
+	以下是参数表：ps：用到的也就那么几个
+
+	%p – insert pid into filename 添加pid
+
+	%u – insert current uid into filename 添加当前uid
+
+	%g – insert current gid into filename 添加当前gid
+
+	%s – insert signal that caused the coredump into the filename 添加导致产生core的信号
+
+	%t – insert UNIX time that the coredump occurred into filename 添加core文件生成时的unix时间
+
+	%h – insert hostname where the coredump happened into filename 添加主机名
+
+	%e – insert coreddumping executable name into filename 添加命令名
+
+
+	Ulimit –cn
+
+	其中n为数字，表示允许Core文件体积的最大值，单位为Kb，如果想设为无限大，可以执行：
+	
+	/etc/profile 添加：
+	ulimit -c unlimited
+	echo "/var/coredump_%e_%p_%s_%t" > /proc/sys/kernel/core_pattern
+	echo "/var/coredump_%e_%s" > /proc/sys/kernel/core_pattern
+	
+	gdb
+	(gdb) core-file coredump_laserservice
+	(gdb) info sharedlibrary
+	(gdb) set solib-search-path /usr/lib:/lib
+
+
+
+arm-linux-gnueabihf-objdump -dSl laserservice > laserservice.S
+arm-linux-gnueabihf-addr2line -e laserservice -ifC 0x6008e
+addr2line -a -e laserservice_D -ifC 0x98f0a 0x6008e 0x269c8 0x29d1c 0x2b2ae 0x26172 0x9a45c 0x9ac4e 0xa0294
+
+
+xuyang@ubuntu15:~/blog$ c++filt _ZN1N1C4FuncEi
+
+

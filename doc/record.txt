@@ -1,0 +1,95 @@
+1. 
+Linux expect
+
+
+Linux declare命令	
+
+Linux losetup命令用于设置循环设备。
+循环设备可把文件虚拟成区块设备，籍以模拟整个文件系统，让用户得以将其视为硬盘驱动器，光驱或软驱等设备，并挂入当作目录来使用。
+
+2.  man
+    1、Standard commands （标准命令）
+    2、System calls （系统调用）
+    3、Library functions （库函数）
+    4、Special devices （设备说明）
+    5、File formats （文件格式）
+    6、Games and toys （游戏和娱乐）
+    7、Miscellaneous （杂项）
+    8、Administrative Commands （管理员命令）
+    9 其他（Linux特定的）， 用来存放内核例行程序的文档。
+
+3. 
+mount -t nfs 192.168.13.159:/home/wyl/work/laserbox/laserservice/build/bin /tmp -o nolock  \n
+mount -t nfs 201.234.3.2:/ /mnt -o nolock  \n
+
+
+4.  sed -i -e "s#ttyS0::respawn:/usr/sbin/mklaser#test#g" inittab 
+sed -i -e "s\ttyS0::respawn:/usr/sbin/mklaser\test\g" inittab 
+
+sed -i "s#\#ttyS0::respawn:/usr/sbin/mklaser#ttyS0::respawn:/usr/sbin/mklaser#g" /etc/inittab
+sed -i "s#ttyS0::respawn:/usr/sbin/mklaser#\#ttyS0::respawn:/usr/sbin/mklaser#g" /etc/inittab 
+
+5. wpa_supplicant是一个较好的选择，但缺点是它不支持所有的驱动。请浏览wpa_supplicant网站获得它所支持的驱动列表。
+另外，wpa_supplicant目前只能连接到那些你已经配置好ESSID的无线网络，它可以让您连接到那些使用WPA的AP。
+wireless-tools支持几乎所有的无线网卡和驱动，但它不能连接到那些只支持WPA的AP。
+
+Wireless Tools包括以下工具：
+		iwconfig：设置基本无线参数
+        iwlist：扫描、列出频率，比特率，密钥等
+        iwspy：获取每个节点链接的质量(只能查阅与之相连的节点)
+        iwpriv：操作Wireless Extensions 特定驱动
+        ifrename： 基于各种静态标准命名接口
+
+wpa_supplicant是一个连接、配置WIFI的工具，它主要包含wpa_supplicant与wpa_cli两个程序。
+通常情况下，可以通过wpa_cli来进行WIFI的配置与连接，如果有特殊的需要，
+可以编写应用程序直接调用wpa_supplicant的接口直接开发。
+
+启动wpa_supplicant应用:
+	$ wpa_supplicant -D nl80211 -i wlan0 -c /etc/wpa_supplicant.conf -B
+	/etc/wpa_supplicant.conf文件里，添加下面代码:
+		ctrl_interface=/var/run/wpa_supplicant
+		update_config=1
+
+启动wpa_cli应用:
+	$ wpa_cli -i wlan0 scan             // 搜索附近wifi网络
+	$ wpa_cli -i wlan0 scan_result      // 打印搜索wifi网络结果
+	$ wpa_cli -i wlan0 add_network      // 添加一个网络连接
+
+SSID是Service Set Identifier的缩写，意思是：服务集标识。SSID技术可以将一个无线局域网分为几个需要不同身份验证的子网络，
+每一个子网络都需要独立的身份验证，只有通过身份验证的用户才可以进入相应的子网络，防止未被授权的用户进入本网络。
+通俗地说，SSID便是你给自己的无线网络所取的名字
+
+通常，手机WLAN中，bssid其实就是无线路由的MAC地址.
+
+　　ESSID 也可认为是SSID, WIFI 网络名
+
+6. 	
+#include <pthread.h>
+#include <unistd.h>
+tid = pthread_self();
+pthread_getname_np(tid, thread_name, 32);
+
+	char tname[32];
+	prctl(PR_GET_NAME, tname);
+
+syscall(SYS_gettid)
+
+7. 在TCP/IP协议中，“IP地址+TCP或UDP端口号”唯一的标识网络通讯中的一个进程，“IP地址+TCP或UDP端口号”就为socket。
+TCP/IP协议规定：网络数据流应采用大端字节序，即低地址高字节。 
+
+8. 网络层的“ip地址”可以唯一标识网络中的主机，而传输层的“协议+端口”可以唯一标识主机中的应用程序（进程）。
+这样利用三元组（ip地址，协议，端口）就可以标识网络的进程了，网络中的进程通信就可以利用这个标志与其它进程进行交互。
+
+9.  netstat  -ap 
+
+10. M STM32 先把Gcode指令缓存到buffer里按顺序执行。
+    R STM32 立即执行该Gcode指令。
+
+
+11. 
+NAT 模式： 让虚拟系统借助 NAT （网络地址转换）功能， 通过宿主机器所在的网络来访问公网。 
+    也就是说， 使用 NAT 模式可以实现在虚拟系统里访问互联网。 
+	NAT 模式下的虚拟系统的 TCP / IP 配置信息是由VMnet8 虚拟网络的 DHCP 服务器提供的， 
+	本局域网中的其他真实主机无法 ping 通虚拟系统。
+
+桥接模式： 在这种模式下， VMWare 虚拟出来的操作系统就像是局域网中的一台独立的主机， 它可以访问局域网内任何一台机器。
