@@ -1,12 +1,33 @@
+OA网址：http://oa.makeblock.com   
+账号：11048
+
+confluence(KM)网址：http://km.makeblock.com
+账号：11048
+
+
+邮箱初次使用前，需先登录http://exmail.qq.com，初始密码Make123，请修改成新的密码，否则会报错；
+修改初始密码后以下两种方式均可登录使用邮箱：
+1、网页端：登录http://exmail.qq.com
+2、电脑和移动端：下载foxmail，登录使用
+你的邮箱账号是：wangyilong@makeblock.com
+
+usb连接：telnet 201.234.3.1 驱动 RNDIS
+用户名：root
+密码：
+#48Va2#LY@R46JKx
+
 深圳市凯丰实业有限公司  交行深圳竹子林支行
 
 4430 6609 6011 8012 33223
 
 carlos-don
 
-621669 2000000 570 274
 
-6230 52347001 3245 774
+中行：
+6216 6920 0000 0570 274
+
+农行：
+6230 5234 7001 3245 774
 
 全景地图：
 http://www.sz68.com/land/025012340000006034/
@@ -71,6 +92,12 @@ network={
 }
 
 
+
+
+
+连接热点：connect2ap TP-LINK_35D7 123456789
+laserbox 123456
+
 5. 
 如果版本不对应往往会出现很多问题，需要各种方法才能解决，现记录一下我工作中遇到的版本问题，以下版本一般情况下是可以直接安装使用的。
 
@@ -87,3 +114,131 @@ tensorflow.version==’1.4.0’
 拔线：
 [debug] [01-01 01:25:24] [40.01.003.01.ht2] CLIENT 201.234.3.2:50032 dead !!!
 [debug] [01-01 01:25:24] [40.01.003.01.ht2] ClientDisconnected:0 !!!
+
+
+
+
+7. 
+Stm32 uart:
+
+Button:
+/   long button
+<   开始
+{   暂停
+}   offline
+
+Door:
+^    door open
+ >   door close
+
+
+H3 uart:
+
+M22 S8  reset
+M22 S7  Finish 
+
+
+8. 教育版最大速度：F20000  最大功率：S1000
+M32 P22  X轴加速度
+M33 P22 Y轴加速度
+M3 S970 激光功率固定
+M5关闭激光  M6表示打印完成后回复一个“*”符号
+M17 P1 
+M19 S1
+
+
+9.
+/sys/devices/platform/sunxi-ehci.2/usb2
+
+
+root@makeblock0:/sys/devices/platform/sunxi-ehci.2/usb2/2-1# cat serial
+SN0001
+root@makeblock0:/sys/devices/platform/sunxi-ehci.2/usb2/2-1# cat product
+USB 2.0 Camera
+root@makeblock0:/sys/devices/platform/sunxi-ehci.2/usb2/2-1# cat manufacturer
+Sonix Technology Co., Ltd.
+
+root@makeblock0:/sys/devices/platform/sunxi-ehci.2/usb2/2-1# ls -al
+total 0
+drwxr-xr-x    6 root     root             0 Jan  1 00:00 .
+drwxr-xr-x    7 root     root             0 Jan  1 00:00 ..
+drwxr-xr-x    4 root     root             0 Jan  1 00:00 2-1:1.0
+-rw-r--r--    1 root     root          4096 Jan  1 00:02 authorized
+-rw-r--r--    1 root     root          4096 Jan  1 00:02 avoid_reset_quirk
+-rw-r--r--    1 root     root          4096 Jan  1 00:02 bConfigurationValue
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bDeviceClass
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bDeviceProtocol
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bDeviceSubClass
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bMaxPacketSize0
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bMaxPower
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bNumConfigurations
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bNumInterfaces
+-r--r--r--    1 root     root          4096 Jan  1 00:00 bcdDevice
+-r--r--r--    1 root     root          4096 Jan  1 00:02 bmAttributes
+-r--r--r--    1 root     root          4096 Jan  1 00:02 busnum
+-r--r--r--    1 root     root          4096 Jan  1 00:02 configuration
+-r--r--r--    1 root     root         65553 Jan  1 00:00 descriptors
+-r--r--r--    1 root     root          4096 Jan  1 00:02 dev
+-r--r--r--    1 root     root          4096 Jan  1 00:02 devnum
+-r--r--r--    1 root     root          4096 Jan  1 00:02 devpath
+lrwxrwxrwx    1 root     root             0 Jan  1 00:02 driver -> ../../../../../bus/usb/drivers/usb
+drwxr-xr-x    3 root     root             0 Jan  1 00:02 ep_00
+-r--r--r--    1 root     root          4096 Jan  1 00:00 idProduct
+-r--r--r--    1 root     root          4096 Jan  1 00:00 idVendor
+-r--r--r--    1 root     root          4096 Jan  1 00:02 maxchild
+drwxr-xr-x    2 root     root             0 Jan  1 00:02 power
+-r--r--r--    1 root     root          4096 Jan  1 00:00 product
+-r--r--r--    1 root     root          4096 Jan  1 00:02 quirks
+-r--r--r--    1 root     root          4096 Jan  1 00:02 removable
+--w-------    1 root     root          4096 Jan  1 00:02 remove
+-r--r--r--    1 root     root          4096 Jan  1 00:02 speed
+lrwxrwxrwx    1 root     root             0 Jan  1 00:00 subsystem -> ../../../../../bus/usb
+-rw-r--r--    1 root     root          4096 Jan  1 00:00 uevent
+-r--r--r--    1 root     root          4096 Jan  1 00:02 urbnum
+drwxr-xr-x    3 root     root             0 Jan  1 00:00 usb_device
+-r--r--r--    1 root     root          4096 Jan  1 00:02 version
+
+root@makeblock0:/sys/devices/platform/sunxi-ehci.2/usb2/2-1# lsmod
+cdc_acm 13884 2 - Live 0xbf20d000
+uvcvideo 55232 0 - Live 0xbf1f9000
+vfe_v4l2 1006646 0 - Live 0xbf0e8000
+cci 19304 1 vfe_v4l2, Live 0xbf0dd000
+videobuf_dma_contig 3249 1 vfe_v4l2, Live 0xbf0d9000
+videobuf_core 13704 2 vfe_v4l2,videobuf_dma_contig, Live 0xbf0d0000
+vfe_subdev 4219 1 vfe_v4l2, Live 0xbf0cb000
+vfe_os 3625 3 vfe_v4l2,cci,vfe_subdev, Live 0xbf0c6000
+g_ether 35754 0 - Live 0xbf0b6000
+dhd 622295 0 - Live 0xbf000000
+
+
+
+10. 
+http://201.234.3.1:8080/net?action=getssid
+http://201.234.3.1:8080/net?action=aplist
+http://201.234.3.1:8080/net?action=connsta
+TP-LINK_35D7 123456789
+Maker-office hulurobot423
+
+
+ mkdir -p /tmp/nfs ; 
+ mount -t nfs 192.168.13.217:/home/wyl/work/laserbox/laserservice/build/bin /tmp/nfs -o nolock 
+ 
+ 
+11. 
+
+
+commit 55315301f6f22afecac4bf2147a4b711e2e5f595
+Author: wangyilongln <wyl2005@163.com>
+Date:   Thu May 16 11:40:54 2019 +0800
+
+    Refine stop http cmd.
+
+    Only who upload the gcode can stop success.
+
+M    communication/lasercut/LaserHttpDataProcessor.cpp
+
+commit da362c6044512000a574b73b7bd45e72211cf5ed
+Author: wangyilongln <wyl2005@163.com>
+Date:   Fri May 10 12:16:24 2019 +0800
+
+    Add offline qr_code specified process.
