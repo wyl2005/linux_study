@@ -143,8 +143,17 @@ M32 P22  X轴加速度
 M33 P22 Y轴加速度
 M3 S970 激光功率固定
 M5关闭激光  M6表示打印完成后回复一个“*”符号
-M17 P1 
+M17 P1  空气净化器功率100%
 M19 S1
+
+Gcode:
+G0 不出激光
+G01 出激光
+
+Max power: 1000
+Max Speed:
+Cut : 4k 5k (education)
+Curve:  1.3W 2W (education)
 
 
 9.
@@ -242,3 +251,66 @@ Author: wangyilongln <wyl2005@163.com>
 Date:   Fri May 10 12:16:24 2019 +0800
 
     Add offline qr_code specified process.
+
+
+
+12.
+
+nmtui
+nmcli dev wifi connect <NETWORK_NAME> password <PASSWORD> ifname wlan0
+nmcli connection show
+
+
+v4l2-ctl --list-formats-ext --device /dev/video1
+
+
+edgetpu_classify \
+--source /dev/video1:YUY2:640x480:25/1 \
+--model ${DEMO_FILES}/mobilenet_v2_1.0_224_quant_edgetpu.tflite \
+--labels ${DEMO_FILES}/imagenet_labels.txt
+
+edgetpu_detect \
+--source /dev/video1:YUY2:640x480:25/1  \
+--model ${DEMO_FILES}/mobilenet_ssd_v2_face_quant_postprocess_edgetpu.tflite
+
+
+
+
+edgetpu_classify_server \
+--source /dev/video1:YUY2:640x480:25/1  \
+--model ${DEMO_FILES}/mobilenet_v2_1.0_224_quant_edgetpu.tflite \
+--labels ${DEMO_FILES}/imagenet_labels.txt
+
+edgetpu_detect_server \
+--source /dev/video1:YUY2:640x480:25/1  \
+--model ${DEMO_FILES}/mobilenet_ssd_v2_face_quant_postprocess_edgetpu.tflite
+
+
+/usr/bin/python3 /usr/bin/edgetpu_classify_server \
+--model scripts/models/model_18/edgetpu.tflite \
+--labels scripts/models/model_18/labels.txt
+
+
+
+
+commit 22bab1aae75275060fc2dad48ef3e546506f146b
+Author: wangyilongln <wyl2005@163.com>
+Date:   Tue Jun 11 10:49:17 2019 +0800
+
+    Refine Specific process.
+
+commit e46486f46fff9d874186be7b13cc5d0bd48dd8e9
+Author: wangyilongln <wyl2005@163.com>
+Date:   Wed Jun 5 10:53:45 2019 +0800
+
+    Revert "unuse qrcode"
+
+    This reverts commit 00a07dba268c4acd6b29476df81b44f7b3134b95.
+
+
+H3 rootfs:
+commit c2ed38e432da457315f9724caa543f0a78211c80
+Author: wangyilongln <wyl2005@163.com>
+Date:   Mon May 20 19:31:59 2019 +0800
+
+    Add upgrade_package
