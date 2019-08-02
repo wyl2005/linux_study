@@ -292,25 +292,7 @@ edgetpu_detect_server \
 
 
 
-
-commit 22bab1aae75275060fc2dad48ef3e546506f146b
-Author: wangyilongln <wyl2005@163.com>
-Date:   Tue Jun 11 10:49:17 2019 +0800
-
-    Refine Specific process.
-
-commit e46486f46fff9d874186be7b13cc5d0bd48dd8e9
-Author: wangyilongln <wyl2005@163.com>
-Date:   Wed Jun 5 10:53:45 2019 +0800
-
-    Revert "unuse qrcode"
-
-    This reverts commit 00a07dba268c4acd6b29476df81b44f7b3134b95.
-
-
-H3 rootfs:
-commit c2ed38e432da457315f9724caa543f0a78211c80
-Author: wangyilongln <wyl2005@163.com>
-Date:   Mon May 20 19:31:59 2019 +0800
-
-    Add upgrade_package
+docker run --name edgetpu-detect \
+--rm -it --privileged -p 6006:6006 \
+--mount type=bind,src=${DETECT_DIR},dst=/tensorflow/models/research/learn_pet \
+detect-tutorial
