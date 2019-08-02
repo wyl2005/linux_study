@@ -913,6 +913,10 @@ str r0, [r12]
       
 143. 相对于grep的查找，sed的编辑，awk在其对数据分析并生成报告时，显得尤为强大。
 awk 就是把文件逐行的读入，以空格为默认分隔符将每行切片，切开的部分再进行各种分析处理。awk '{print $5}'
+	NR表示从awk开始执行后，按照记录分隔符读取的数据次数，默认的记录分隔符为换行符，
+	因此默认的就是读取的数据行数，NR可以理解为Number of Record的缩写。
+	NF 表示的是浏览记录的域的个数 
+	$NF 表示的最后一个Field（列），即输出最后一个字段的内容
 
 144. SecureCRT 抓的log可能会不全，Transfer -> Receive ASCII 抓的比较全。
 
@@ -2378,7 +2382,10 @@ sudo docker attach 容器ID
 sudo docker exec -it edgetpu-classify /bin/bash
 
 
-docker run -it --runtime=nvidia -v $(realpath ~/notebooks):/tf/notebooks -p 8888:8888 tensorflow/tensorflow:latest-gpu-py3-jupyter
+docker run -it --rm --runtime=nvidia -v $(realpath ~/notebooks):/tf/notebooks -p 8888:8888 tensorflow/tensorflow:latest-gpu-py3-jupyter
+docker run -u $(id -u):$(id -g) -it --runtime=nvidia -v $(realpath ~/notebooks):/tf/notebooks -p 8888:8888 tensorflow/tensorflow:latest-gpu-py3-jupyter
+docker run -u $(id -u):$(id -g) -it --runtime=nvidia -v $(realpath ~/notebooks):/tf/notebooks -p 8888:8888 tensorflow:latest-gpu-py3-jupyter-vim
+docker run -v $(realpath ~/notebooks):/tf/notebooks -p 8888:8888 tensorflow:latest-gpu-py3-jupyter-vim
 
 docker run -it -v $(realpath ~/notebooks):/tf/notebooks -p 8888:8888 tensorflow/tensorflow:latest-py3-jupyter
 docker run -u $(id -u):$(id -g) -it -v $(realpath ~/notebooks):/tf/notebooks -p 8888:8888 tensorflow/tensorflow:latest-py3-jupyter
@@ -2444,3 +2451,22 @@ UBUNTU_CODENAME=xenial
 网络适配器 2 ==> 自定义 VMnet2        ==> 桥接模式 （USB Ethernet/RNDIS Gadget）==> ens38 201.234.3.3 
 网络适配器 3 ==> NAT模式（共享主机IP）==> ens39 192.168.2.128 (这种模式外面的主机ping不同)
 网络适配器 3 ==> 自定义 VMnet0        ==> 仅主机模式 ==> ens39 192.168.159.128
+
+304.
+$ git clone http://github.com/large-repository --depth 1
+$ cd large-repository
+$ git fetch --unshallow
+
+305.
+PYTHONPATH是Python搜索路径，默认我们import的模块都会从PYTHONPATH里面寻找。
+PYTHONPATH sets the search path for importing python modules, not for executing them like you're trying.
+
+import os
+print sys.path
+os.sys.path
+
+设置PYTHONPATH：
+export PYTHONPATH=$PYTHONPATH:/home/ershisui
+sys.path.append('/home/ershisui/')
+
+305. TOPS(trillion operations per second)
