@@ -20,8 +20,6 @@ usb连接：telnet 201.234.3.1 驱动 RNDIS
 
 4430 6609 6011 8012 33223
 
-carlos-don
-
 
 中行：
 6216 6920 0000 0570 274
@@ -41,23 +39,11 @@ http://news.szhome.com/233607.html
 
 
 1.
-1月7日 15:34
-hello, 能否发一版最新的laserbox 上位机软件给我
-已读
-
 https://www.makeblock.com/cn/maker-tools/laserbox-2
 
 2. USB Ethernet/RNDIS Gadget， laserbox usb 虚拟网口驱动
 
-3. 打印任务统计
-commit 59bc7e567ed3ae36125fe1589c1c216789e58671
-Author: wangyilong <wangyilong@makeblock.com>
-Date:   Tue Jan 15 15:48:01 2019 +0800
-
-    Fix get print task number interface.
-
-    Fix get print task number interface.
-
+3.
 
 4. 
 ctrl_interface=/var/run/wpa_supplicant
@@ -92,9 +78,6 @@ network={
 }
 
 
-
-
-
 连接热点：connect2ap TP-LINK_35D7 123456789
 laserbox 123456
 
@@ -116,22 +99,7 @@ tensorflow.version==’1.4.0’
 [debug] [01-01 01:25:24] [40.01.003.01.ht2] ClientDisconnected:0 !!!
 
 
-
-
 7. 
-Stm32 uart:
-
-Button:
-/   long button
-<   开始
-{   暂停
-}   offline
-
-Door:
-^    door open
- >   door close
-
-
 H3 uart:
 
 M22 S8  reset
@@ -139,22 +107,43 @@ M22 S7  Finish
 
 
 8. 教育版最大速度：F20000  最大功率：S1000
-M32 P22  X轴加速度
-M33 P22 Y轴加速度
-M3 S970 激光功率固定
-M5关闭激光  M6表示打印完成后回复一个“*”符号
-M17 P1  空气净化器功率100%
-M19 S1
+	M32 P22  X轴加速度
+	M33 P22 Y轴加速度
+	M3 S970 激光功率固定
+	M5关闭激光  M6表示打印完成后回复一个“*”符号
+	M17 P1  空气净化器功率100%
+	M19 S1
+	M3 Sxxx  设置激光功率固定  curve_bit
+	M4 Sxxx  设置激光功率固定  cut和curve_vector
+	
+
+				   power     speed per   max speed   M32/M33
+	cut            cut       cut         5K          P40/P20
+	curve_vector   curve     curve       5K          P14/P14
+	curve_bit      curve     curve       2W          P11/P11
+	白纸选图的curve_vector_power_percent = curve_power_percent*0.6
+	白纸选图的curve_bit_power_percent    = curve_power_percent/4
+
 
 Gcode:
-G0 不出激光
-G01 出激光
+	G0 不出激光
+	G01 出激光
 
-Max power: 1000
-Max Speed:
-Cut : 4k 5k (education)
-Curve:  1.3W 2W (education)
+	Max power: 1000 (Spind)
+	Max Speed:
+			    normal   education
+		Cut :   4k       5k (F)
+		Curve:  1.3W     2W (F)
 
+Button:
+	/   long button
+	<   开始
+	{   暂停
+	}   offline
+
+Door:
+	^    door open
+	>    door close
 
 9.
 /sys/devices/platform/sunxi-ehci.2/usb2
