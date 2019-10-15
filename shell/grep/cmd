@@ -1,0 +1,12 @@
+##查看系统内存、缓存、交换分区-e的作用是匹配多个表达式
+cat /proc/meminfo |grep -e Mem -e Cache -e Swap 
+
+##查找/etc目录下的所有文件中的邮件地址；-R递归，-n表示匹配的行号，-o只输出匹配内容，-E支持扩展正则表达式，
+grep -R -o -n -E  '[a-z0-9_]+\@[a-z0-9_]+\.[a-z]{2,4}' /etc/
+
+##查找包含“HOSTNAME”的文件名，-l显示匹配的文件名，-L显示不匹配的文件名
+grep -R -l 'HOSTNAME' /etc/ 
+
+##截取ip地址，[^ ]*表示以非空字符作为结束符，[0-9.]*表示数字和点的组合
+ifconfig eth0 |grep -E -o 'inet addr:[^ ]*' |grep -o '[0-9.]*'
+

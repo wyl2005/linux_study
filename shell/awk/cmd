@@ -1,0 +1,2 @@
+awk 'NR==FNR{a[i]=$0;i++}NR>FNR{print a[j]" "$0;j++}' file1 file2
+
