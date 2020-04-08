@@ -1,0 +1,23 @@
+/.vs/
+/.vscode/
+# Prerequisites
+*.d
+
+*.o
+*.ko
+*.obj
+*.cmd
+
+a.out
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+*.bin
+
+*.~vsdx
+~*
+*.so
+libautofocus_api*
