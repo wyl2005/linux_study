@@ -1,0 +1,11 @@
+[core]
+	editor = vim
+	filemode = false
+[alias]
+	st = status
+	br = branch
+	co = checkout
+    lg = log --oneline --decorate --graph -20
+[user]
+	email = wyl2005@163.com
+	name = wyl2005
