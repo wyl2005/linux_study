@@ -1,0 +1,23 @@
+snippet def "define" b
+#define 
+endsnippet
+
+snippet for "for loop" b
+for (int ${1:i} = $2; $1 < $3; $1++){
+    $4
+}
+endsnippet
+
+
+snippet tra "trace" b
+TRACE("%s %d wyl", __FUNCTION__, __LINE__);
+endsnippet
+
+
+snippet tri "traceid" b
+TRACE(2, "%s %d wyl", __FUNCTION__, __LINE__);
+endsnippet
+
+snippet trac "traceid" b
+TRACE(3, "%s LR=%p TID=%d", __FUNCTION__,__builtin_return_address(0), osGetThreadIntId());
+endsnippet

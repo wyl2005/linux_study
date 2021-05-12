@@ -1,0 +1,27 @@
+[core]
+	editor = vim
+	filemode = false
+	pager = less -x1,5
+	quotepath = false
+[alias]
+	st = status
+	br = branch
+	co = checkout
+    lg = log --oneline --decorate --graph -20
+	lgn = log --name-status
+	lgn1 = log --name-status -1
+	lgp = log -p
+	lgp1 = log -p -1
+	df = diff
+[user]
+	email = yilongwang@bestechnic.com
+	name = wangyilong
+
+
+[i18n]
+	commitEncoding = utf-8
+	logOutputEncoding = utf-8
+[credential]
+	helper = store
+[oh-my-zsh]
+	hide-dirty = 1
